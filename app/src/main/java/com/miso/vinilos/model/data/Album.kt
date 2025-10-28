@@ -1,4 +1,4 @@
-package com.miso.vinilos.model.entities
+package com.miso.vinilos.model.data
 
 import com.google.gson.annotations.SerializedName
 import java.util.Date

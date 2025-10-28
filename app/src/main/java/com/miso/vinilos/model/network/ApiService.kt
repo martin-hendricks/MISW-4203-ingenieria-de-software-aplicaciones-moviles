@@ -1,4 +1,4 @@
-package com.miso.vinilos.data.network
+package com.miso.vinilos.model.network
 
 /**
  * Interface principal de la API de Vinilos

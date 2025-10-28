@@ -1,4 +1,4 @@
-package com.miso.vinilos.data.network
+package com.miso.vinilos.model.network
 
 /**
  * Constantes de configuración de red

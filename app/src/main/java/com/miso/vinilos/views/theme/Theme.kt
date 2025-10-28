@@ -1,4 +1,4 @@
-package com.miso.vinilos.ui.theme
+package com.miso.vinilos.views.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

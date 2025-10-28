@@ -1,14 +1,17 @@
-package com.miso.vinilos.ui.navigation
+package com.miso.vinilos.views.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.miso.vinilos.ui.components.BottomNavigationBar
+import com.miso.vinilos.views.components.BottomNavigationBar
+import com.miso.vinilos.views.screens.AlbumListScreen
+import com.miso.vinilos.viewmodels.AlbumViewModel
 
 /**
  * Configura el NavHost con todas las rutas de navegación de la aplicación
@@ -28,7 +31,8 @@ fun AppNavigation(navController: NavHostController) {
         ) {
             // Pantalla de Álbumes
             composable(NavigationRoutes.Albums.route) {
-                
+                val viewModel: AlbumViewModel = viewModel()
+                AlbumListScreen(viewModel = viewModel)
             }
 
             // Pantalla de Artistas

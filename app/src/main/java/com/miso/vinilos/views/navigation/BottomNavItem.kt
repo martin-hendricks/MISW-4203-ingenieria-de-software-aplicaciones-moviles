@@ -1,4 +1,4 @@
-package com.miso.vinilos.ui.navigation
+package com.miso.vinilos.views.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*

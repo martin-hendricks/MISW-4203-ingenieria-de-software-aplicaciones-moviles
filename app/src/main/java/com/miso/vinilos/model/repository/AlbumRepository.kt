@@ -1,10 +1,10 @@
 package com.miso.vinilos.model.repository
 
-import com.miso.vinilos.data.network.RetrofitClient
-import com.miso.vinilos.model.entities.Album
-import com.miso.vinilos.model.entities.AlbumCreateDTO
-import com.miso.vinilos.model.entities.Track
+import com.miso.vinilos.model.data.Album
+import com.miso.vinilos.model.data.AlbumCreateDTO
+import com.miso.vinilos.model.data.Track
 import com.miso.vinilos.model.network.AlbumApiService
+import com.miso.vinilos.model.network.RetrofitClient
 
 /**
  * Repositorio para manejar las operaciones relacionadas con álbumes

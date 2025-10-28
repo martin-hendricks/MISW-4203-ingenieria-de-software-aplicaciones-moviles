@@ -1,4 +1,4 @@
-package com.miso.vinilos.data.network
+package com.miso.vinilos.model.network
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
