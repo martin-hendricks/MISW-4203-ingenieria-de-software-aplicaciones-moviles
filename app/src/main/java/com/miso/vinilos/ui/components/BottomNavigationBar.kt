@@ -1,4 +1,4 @@
-package com.example.vinilos.ui.components
+package com.miso.vinilos.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.HorizontalDivider
@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.vinilos.ui.navigation.BottomNavItem
+import com.miso.vinilos.ui.navigation.BottomNavItem
 
 /**
  * Barra de navegación inferior con las 4 opciones principales de la app

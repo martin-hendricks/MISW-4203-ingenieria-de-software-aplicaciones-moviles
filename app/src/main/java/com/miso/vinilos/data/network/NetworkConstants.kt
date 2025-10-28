@@ -1,4 +1,4 @@
-package com.example.vinilos.data.network
+package com.miso.vinilos.data.network
 
 object NetworkConstants {
 

@@ -1,4 +1,4 @@
-package com.example.vinilos
+package com.miso.vinilos
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

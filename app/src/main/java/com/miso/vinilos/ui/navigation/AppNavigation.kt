@@ -1,20 +1,14 @@
-package com.example.vinilos.ui.navigation
+package com.miso.vinilos.ui.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.vinilos.ui.components.BottomNavigationBar
-import com.example.vinilos.ui.components.VinilosListView
-import com.example.vinilos.ui.components.VinilosListItem
+import com.miso.vinilos.ui.components.BottomNavigationBar
 
 /**
  * Configura el NavHost con todas las rutas de navegación de la aplicación

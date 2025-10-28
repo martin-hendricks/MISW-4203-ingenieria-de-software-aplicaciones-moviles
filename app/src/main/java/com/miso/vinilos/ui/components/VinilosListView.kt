@@ -1,4 +1,4 @@
-package com.example.vinilos.ui.components
+package com.miso.vinilos.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

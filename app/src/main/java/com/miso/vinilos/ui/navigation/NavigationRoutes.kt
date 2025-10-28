@@ -1,4 +1,4 @@
-package com.example.vinilos.ui.navigation
+package com.miso.vinilos.ui.navigation
 
 /**
  * Rutas de navegación de la aplicación

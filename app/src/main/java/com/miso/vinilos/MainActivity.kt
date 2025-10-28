@@ -1,12 +1,12 @@
-package com.example.vinilos
+package com.miso.vinilos
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
-import com.example.vinilos.ui.navigation.AppNavigation
-import com.example.vinilos.ui.theme.VinilosTheme
+import com.miso.vinilos.ui.navigation.AppNavigation
+import com.miso.vinilos.ui.theme.VinilosTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

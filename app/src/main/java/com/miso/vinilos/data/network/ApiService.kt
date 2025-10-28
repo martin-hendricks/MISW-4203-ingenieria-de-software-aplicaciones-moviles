@@ -1,4 +1,4 @@
-package com.example.vinilos.data.network
+package com.miso.vinilos.data.network
 
 /**
  * Interface principal de la API de Vinilos

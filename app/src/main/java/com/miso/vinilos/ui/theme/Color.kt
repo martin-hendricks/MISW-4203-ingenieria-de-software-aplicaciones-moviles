@@ -1,4 +1,4 @@
-package com.example.vinilos.ui.theme
+package com.miso.vinilos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
