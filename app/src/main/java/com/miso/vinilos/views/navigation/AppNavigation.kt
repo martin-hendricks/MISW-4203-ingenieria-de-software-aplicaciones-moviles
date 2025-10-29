@@ -9,8 +9,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import com.miso.vinilos.views.components.BottomNavigationBar
 import com.miso.vinilos.views.screens.AlbumListScreen
+import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.screens.ProfileScreen
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.viewmodels.ProfileViewModel
@@ -39,7 +42,26 @@ fun AppNavigation(navController: NavHostController) {
                 val albumViewModel: AlbumViewModel = viewModel()
                 AlbumListScreen(
                     albumViewModel = albumViewModel,
-                    profileViewModel = profileViewModel
+                    profileViewModel = profileViewModel,
+                    onAlbumClick = { album ->
+                        navController.navigate(NavigationRoutes.AlbumDetail.createRoute(album.id))
+                    }
+                )
+            }
+
+            // Pantalla de Detalle de Álbum
+            composable(
+                route = NavigationRoutes.AlbumDetail.route,
+                arguments = listOf(
+                    navArgument("albumId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
+                val albumViewModel: AlbumViewModel = viewModel()
+                AlbumDetailScreen(
+                    albumId = albumId,
+                    albumViewModel = albumViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
 

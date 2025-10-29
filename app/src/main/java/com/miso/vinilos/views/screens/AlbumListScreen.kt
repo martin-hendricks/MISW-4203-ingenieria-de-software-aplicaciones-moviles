@@ -19,14 +19,16 @@ import com.miso.vinilos.viewmodels.ProfileViewModel
 /**
  * Pantalla que muestra la lista de álbumes
  * Implementa el patrón MVVM con Jetpack Compose
- * 
+ *
  * @param albumViewModel ViewModel que gestiona el estado de los álbumes
  * @param profileViewModel ViewModel que gestiona el perfil del usuario
+ * @param onAlbumClick Callback que se ejecuta cuando se hace clic en un álbum
  */
 @Composable
 fun AlbumListScreen(
     albumViewModel: AlbumViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    onAlbumClick: (Album) -> Unit
 ) {
     // Observa el estado de la UI desde el ViewModel
     val uiState by albumViewModel.uiState.collectAsStateWithLifecycle()
@@ -41,9 +43,7 @@ fun AlbumListScreen(
             AlbumsList(
                 albums = currentState.albums,
                 userRole = userRole,
-                onAlbumClick = { _ ->
-                    // TODO: Navegar al detalle del álbum en una iteración futura
-                },
+                onAlbumClick = onAlbumClick,
                 onAddAlbum = {
                     // TODO: Navegar a pantalla de agregar álbum
                 }
