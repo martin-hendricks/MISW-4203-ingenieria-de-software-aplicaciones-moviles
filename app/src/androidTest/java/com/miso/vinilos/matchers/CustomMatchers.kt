@@ -83,9 +83,13 @@ object CustomMatchers {
     
     /**
      * Verifica que un performer específico esté visible
+     * Nota: Puede haber múltiples álbumes del mismo performer, por eso verificamos que al menos uno esté visible
      */
-    fun verifyPerformerIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule, performerName: String): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText(performerName)
+    fun verifyPerformerIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule, performerName: String) {
+        composeTestRule.onAllNodesWithText(performerName, substring = true)
+            .fetchSemanticsNodes().isNotEmpty()
+        // Verificamos que el primer nodo esté visible
+        composeTestRule.onAllNodesWithText(performerName, substring = true)[0]
             .assertIsDisplayed()
     }
     

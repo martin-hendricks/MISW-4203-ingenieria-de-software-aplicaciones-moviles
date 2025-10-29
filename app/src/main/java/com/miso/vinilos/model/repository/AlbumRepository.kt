@@ -9,10 +9,12 @@ import com.miso.vinilos.model.network.RetrofitClient
 /**
  * Repositorio para manejar las operaciones relacionadas con álbumes
  * Implementa el patrón Repository para separar la lógica de datos
+ *
+ * @param apiService Servicio API para álbumes (inyectable para testing)
  */
-class AlbumRepository {
-    
+class AlbumRepository(
     private val apiService: AlbumApiService = RetrofitClient.createService()
+) {
     
     /**
      * Obtiene todos los álbumes
@@ -144,14 +146,26 @@ class AlbumRepository {
     companion object {
         @Volatile
         private var instance: AlbumRepository? = null
-        
+
         /**
          * Obtiene la instancia singleton del repositorio
+         * Para testing, se puede pasar una instancia personalizada
          */
-        fun getInstance(): AlbumRepository {
+        fun getInstance(customInstance: AlbumRepository? = null): AlbumRepository {
+            if (customInstance != null) {
+                return customInstance
+            }
             return instance ?: synchronized(this) {
                 instance ?: AlbumRepository().also { instance = it }
             }
+        }
+
+        /**
+         * Resetea la instancia singleton (útil para testing)
+         */
+        @Synchronized
+        fun resetInstance() {
+            instance = null
         }
     }
 }

@@ -66,21 +66,26 @@ class SimpleE2ETest {
 
         // Assert
         composeTestRule.waitForIdle()
-        
+
         // Verificar que estamos en la pantalla de Álbumes (por defecto)
         composeTestRule.onAllNodesWithText("Álbumes")[0].assertIsDisplayed() // Header
-        
-        // Hacer clic en Perfil
+
+        // Hacer clic en Perfil (pestaña del bottom navigation)
         composeTestRule.onNodeWithText("Perfil").performClick()
         composeTestRule.waitForIdle()
-        
+
         // Verificar que la navegación funciona (no hay crash)
         composeTestRule.onRoot().assertExists()
-        
-        // Volver a Álbumes
-        composeTestRule.onAllNodesWithText("Álbumes")[1].performClick() // Navigation tab
+
+        // Volver a Álbumes haciendo clic en la última ocurrencia (bottom navigation)
+        val albumNodes = composeTestRule.onAllNodesWithText("Álbumes").fetchSemanticsNodes()
+        if (albumNodes.size > 1) {
+            composeTestRule.onAllNodesWithText("Álbumes")[albumNodes.size - 1].performClick()
+        } else {
+            composeTestRule.onNodeWithText("Álbumes").performClick()
+        }
         composeTestRule.waitForIdle()
-        
+
         // Verificar que volvimos
         composeTestRule.onRoot().assertExists()
     }

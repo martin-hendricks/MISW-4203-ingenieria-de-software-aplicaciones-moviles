@@ -22,10 +22,12 @@ sealed interface AlbumUiState {
 /**
  * ViewModel para gestionar el estado y la lógica de negocio de la lista de álbumes
  * Sigue el patrón MVVM de Android Architecture Guidelines
+ *
+ * @param repository Repositorio de álbumes (inyectable para testing)
  */
-class AlbumViewModel : ViewModel() {
-    
-    private val repository = AlbumRepository.getInstance()
+class AlbumViewModel(
+    private val repository: AlbumRepository = AlbumRepository.getInstance()
+) : ViewModel() {
     
     /**
      * Estado actual de la UI, inicializado en Loading

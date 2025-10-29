@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.vinilos"
+    namespace = "com.miso.vinilos"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.vinilos"
-        minSdk = 24
+        applicationId = "com.miso.vinilos"
+        minSdk = 21
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"

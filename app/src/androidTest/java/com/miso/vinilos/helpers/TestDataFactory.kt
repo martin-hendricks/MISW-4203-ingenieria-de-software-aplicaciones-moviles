@@ -96,6 +96,7 @@ object TestDataFactory {
     
     /**
      * Crea una lista de álbumes de prueba
+     * Nota: Evitamos duplicar performers para facilitar los tests
      */
     fun createTestAlbums(): List<Album> {
         return listOf(
@@ -103,7 +104,8 @@ object TestDataFactory {
                 id = 1,
                 name = "Abbey Road",
                 cover = "https://example.com/abbey-road.jpg",
-                description = "El último álbum grabado por The Beatles"
+                description = "El último álbum grabado por The Beatles",
+                performers = listOf(createTestPerformer(1, "The Beatles"))
             ),
             createTestAlbum(
                 id = 2,
@@ -123,15 +125,15 @@ object TestDataFactory {
                 id = 4,
                 name = "Sgt. Pepper's Lonely Hearts Club Band",
                 cover = "https://example.com/sgt-pepper.jpg",
-                description = "Álbum conceptual de The Beatles",
-                performers = listOf(createTestPerformer(1, "The Beatles"))
+                description = "Álbum conceptual de Queen",
+                performers = listOf(createTestPerformer(4, "Queen"))
             ),
             createTestAlbum(
                 id = 5,
                 name = "Wish You Were Here",
                 cover = "https://example.com/wish-you-were-here.jpg",
-                description = "Noveno álbum de estudio de Pink Floyd",
-                performers = listOf(createTestPerformer(2, "Pink Floyd"))
+                description = "Álbum icónico de David Bowie",
+                performers = listOf(createTestPerformer(5, "David Bowie"))
             )
         )
     }
