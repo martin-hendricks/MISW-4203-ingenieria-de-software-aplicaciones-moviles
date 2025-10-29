@@ -1,5 +1,6 @@
 package com.miso.vinilos.model.network
 
+import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -28,13 +29,23 @@ object RetrofitClient {
     }
     
     /**
+     * Gson configurado para manejar fechas en formato ISO 8601
+     */
+    private val gson by lazy {
+        GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .setLenient()
+            .create()
+    }
+    
+    /**
      * Instancia de Retrofit configurada con la URL base y convertidor Gson
      */
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(NetworkConstants.BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
     

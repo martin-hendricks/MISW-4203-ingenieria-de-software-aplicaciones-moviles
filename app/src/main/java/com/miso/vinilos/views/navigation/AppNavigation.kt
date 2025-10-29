@@ -11,13 +11,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.miso.vinilos.views.components.BottomNavigationBar
 import com.miso.vinilos.views.screens.AlbumListScreen
+import com.miso.vinilos.views.screens.ProfileScreen
 import com.miso.vinilos.viewmodels.AlbumViewModel
+import com.miso.vinilos.viewmodels.ProfileViewModel
 
 /**
  * Configura el NavHost con todas las rutas de navegación de la aplicación
  */
 @Composable
 fun AppNavigation(navController: NavHostController) {
+    // ViewModels compartidos entre pantallas
+    val profileViewModel: ProfileViewModel = viewModel()
+    
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,  // Background for all screens
         bottomBar = {
@@ -31,23 +36,26 @@ fun AppNavigation(navController: NavHostController) {
         ) {
             // Pantalla de Álbumes
             composable(NavigationRoutes.Albums.route) {
-                val viewModel: AlbumViewModel = viewModel()
-                AlbumListScreen(viewModel = viewModel)
+                val albumViewModel: AlbumViewModel = viewModel()
+                AlbumListScreen(
+                    albumViewModel = albumViewModel,
+                    profileViewModel = profileViewModel
+                )
             }
 
             // Pantalla de Artistas
             composable(NavigationRoutes.Artists.route) {
-
+                // TODO: Implementar pantalla de artistas
             }
             
             // Pantalla de Coleccionistas
             composable(NavigationRoutes.Collectors.route) {
-
+                // TODO: Implementar pantalla de coleccionistas
             }
             
             // Pantalla de Perfil
             composable(NavigationRoutes.Profile.route) {
-
+                ProfileScreen(viewModel = profileViewModel)
             }
         }
     }

@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
  * @param T Tipo genérico (Album, Artist, Collector, etc.)
  * @param title Título que se muestra en la parte superior
  * @param items Lista de elementos a mostrar
- * @param onItemSelected Callback cuando se selecciona un item
  * @param modifier Modificadores opcionales
  * @param onPlusClick Callback opcional para el botón de agregar
  * @param itemContent Función composable para renderizar cada item
@@ -31,7 +30,6 @@ import androidx.compose.ui.unit.dp
 fun <T> VinilosListView(
     title: String,
     items: List<T>,
-    onItemSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
     onPlusClick: (() -> Unit)? = null,
     itemContent: @Composable (T) -> Unit

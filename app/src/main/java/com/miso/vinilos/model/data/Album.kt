@@ -1,6 +1,7 @@
 package com.miso.vinilos.model.data
 
 import com.google.gson.annotations.SerializedName
+import java.util.Calendar
 import java.util.Date
 
 /**
@@ -42,7 +43,9 @@ data class Album(
      * Retorna el año de lanzamiento del álbum
      */
     fun getReleaseYear(): Int {
-        return releaseDate.year + 1900
+        val calendar = Calendar.getInstance()
+        calendar.time = releaseDate
+        return calendar.get(Calendar.YEAR)
     }
     
     /**

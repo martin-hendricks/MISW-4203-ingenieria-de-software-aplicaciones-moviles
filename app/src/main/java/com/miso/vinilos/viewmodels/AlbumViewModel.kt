@@ -41,14 +41,23 @@ class AlbumViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = AlbumUiState.Loading
             
-            val result = repository.getAlbums()
-            result.onSuccess { albums ->
-                _uiState.value = AlbumUiState.Success(albums)
-            }.onFailure { exception ->
-                _uiState.value = AlbumUiState.Error(
-                    exception.message ?: "Error desconocido al cargar álbumes"
-                )
-            }
+            repository.getAlbums()
+                .onSuccess { albums ->
+                    _uiState.value = AlbumUiState.Success(albums)
+                }
+                .onFailure { exception ->
+                    val errorMessage = when {
+                        exception.message?.contains("Unable to resolve host") == true -> 
+                            "No se puede conectar al servidor. Verifica que el backend esté corriendo en localhost:3000"
+                        exception.message?.contains("Failed to connect") == true -> 
+                            "Error de conexión. Verifica tu conexión de red"
+                        exception.message?.contains("timeout") == true -> 
+                            "Tiempo de espera agotado. El servidor no responde"
+                        else -> 
+                            "Error: ${exception.message ?: "Error desconocido al cargar álbumes"}"
+                    }
+                    _uiState.value = AlbumUiState.Error(errorMessage)
+                }
         }
     }
     

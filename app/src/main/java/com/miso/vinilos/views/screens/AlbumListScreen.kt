@@ -3,29 +3,34 @@ package com.miso.vinilos.views.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.miso.vinilos.model.data.Album
+import com.miso.vinilos.model.data.UserRole
 import com.miso.vinilos.views.components.VinilosListItem
 import com.miso.vinilos.views.components.VinilosListView
 import com.miso.vinilos.viewmodels.AlbumUiState
 import com.miso.vinilos.viewmodels.AlbumViewModel
+import com.miso.vinilos.viewmodels.ProfileViewModel
 
 /**
  * Pantalla que muestra la lista de álbumes
  * Implementa el patrón MVVM con Jetpack Compose
  * 
- * @param viewModel ViewModel que gestiona el estado de la pantalla
+ * @param albumViewModel ViewModel que gestiona el estado de los álbumes
+ * @param profileViewModel ViewModel que gestiona el perfil del usuario
  */
 @Composable
 fun AlbumListScreen(
-    viewModel: AlbumViewModel
+    albumViewModel: AlbumViewModel,
+    profileViewModel: ProfileViewModel
 ) {
     // Observa el estado de la UI desde el ViewModel
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by albumViewModel.uiState.collectAsStateWithLifecycle()
+    val userRole by profileViewModel.userRole.collectAsStateWithLifecycle()
     
     // Renderiza según el estado actual
     when (val currentState = uiState) {
@@ -35,16 +40,19 @@ fun AlbumListScreen(
         is AlbumUiState.Success -> {
             AlbumsList(
                 albums = currentState.albums,
-                onRefresh = { viewModel.refreshAlbums() },
-                onAlbumClick = { album ->
+                userRole = userRole,
+                onAlbumClick = { _ ->
                     // TODO: Navegar al detalle del álbum en una iteración futura
+                },
+                onAddAlbum = {
+                    // TODO: Navegar a pantalla de agregar álbum
                 }
             )
         }
         is AlbumUiState.Error -> {
             ErrorState(
                 message = currentState.message,
-                onRetry = { viewModel.refreshAlbums() }
+                onRetry = { albumViewModel.refreshAlbums() }
             )
         }
     }
@@ -54,19 +62,26 @@ fun AlbumListScreen(
  * Componente que muestra la lista de álbumes usando VinilosListView
  * 
  * @param albums Lista de álbumes a mostrar
- * @param onRefresh Callback para refrescar la lista
+ * @param userRole Rol actual del usuario
  * @param onAlbumClick Callback cuando se selecciona un álbum
+ * @param onAddAlbum Callback cuando se presiona el botón de agregar
  */
 @Composable
 private fun AlbumsList(
     albums: List<Album>,
-    onRefresh: () -> Unit,
-    onAlbumClick: (Album) -> Unit
+    userRole: UserRole,
+    onAlbumClick: (Album) -> Unit,
+    onAddAlbum: () -> Unit
 ) {
     VinilosListView(
         title = "Álbumes",
         items = albums,
-        onItemSelected = onAlbumClick
+        // Solo muestra el botón de agregar si el usuario es coleccionista
+        onPlusClick = if (userRole == UserRole.COLLECTOR) {
+            { onAddAlbum() }
+        } else {
+            null
+        }
     ) { album ->
         VinilosListItem(
             imageUrl = album.cover,
