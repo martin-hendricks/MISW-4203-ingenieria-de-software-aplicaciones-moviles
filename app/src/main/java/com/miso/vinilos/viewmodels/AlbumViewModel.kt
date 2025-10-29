@@ -41,15 +41,13 @@ class AlbumViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = AlbumUiState.Loading
             
-            when (val result = repository.getAlbums()) {
-                is kotlin.Result.Success -> {
-                    _uiState.value = AlbumUiState.Success(result.value)
-                }
-                is kotlin.Result.Failure -> {
-                    _uiState.value = AlbumUiState.Error(
-                        result.exception.message ?: "Error desconocido al cargar álbumes"
-                    )
-                }
+            val result = repository.getAlbums()
+            result.onSuccess { albums ->
+                _uiState.value = AlbumUiState.Success(albums)
+            }.onFailure { exception ->
+                _uiState.value = AlbumUiState.Error(
+                    exception.message ?: "Error desconocido al cargar álbumes"
+                )
             }
         }
     }
