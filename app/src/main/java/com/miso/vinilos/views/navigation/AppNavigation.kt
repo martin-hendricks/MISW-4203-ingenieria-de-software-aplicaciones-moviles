@@ -65,10 +65,11 @@ fun AppNavigation(
                 )
             ) { backStackEntry ->
                 val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
-                val albumViewModel: AlbumViewModel = viewModel()
+                // Usar el ViewModel compartido si existe, sino crear uno nuevo
+                val sharedAlbumViewModel = albumViewModel ?: viewModel()
                 AlbumDetailScreen(
                     albumId = albumId,
-                    albumViewModel = albumViewModel,
+                    albumViewModel = sharedAlbumViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }

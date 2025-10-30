@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.repository.AlbumRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,9 +36,11 @@ sealed interface AlbumDetailUiState {
  * Sigue el patrón MVVM de Android Architecture Guidelines
  *
  * @param repository Repositorio de álbumes (inyectable para testing)
+ * @param dispatcher Dispatcher de coroutines (inyectable para testing)
  */
 class AlbumViewModel(
-    private val repository: AlbumRepository = AlbumRepository.getInstance()
+    private val repository: AlbumRepository = AlbumRepository.getInstance(),
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
     
     /**
@@ -56,22 +60,22 @@ class AlbumViewModel(
      * Este método inicia automáticamente la carga al crear el ViewModel
      */
     fun loadAlbums() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             _uiState.value = AlbumUiState.Loading
-            
+
             repository.getAlbums()
                 .onSuccess { albums ->
                     _uiState.value = AlbumUiState.Success(albums)
                 }
                 .onFailure { exception ->
                     val errorMessage = when {
-                        exception.message?.contains("Unable to resolve host") == true -> 
+                        exception.message?.contains("Unable to resolve host") == true ->
                             "No se puede conectar al servidor. Verifica que el backend esté corriendo en localhost:3000"
-                        exception.message?.contains("Failed to connect") == true -> 
+                        exception.message?.contains("Failed to connect") == true ->
                             "Error de conexión. Verifica tu conexión de red"
-                        exception.message?.contains("timeout") == true -> 
+                        exception.message?.contains("timeout") == true ->
                             "Tiempo de espera agotado. El servidor no responde"
-                        else -> 
+                        else ->
                             "Error: ${exception.message ?: "Error desconocido al cargar álbumes"}"
                     }
                     _uiState.value = AlbumUiState.Error(errorMessage)
@@ -94,7 +98,7 @@ class AlbumViewModel(
      * @param albumId ID del álbum a cargar
      */
     fun loadAlbumDetail(albumId: Int) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             _albumDetailState.value = AlbumDetailUiState.Loading
 
             repository.getAlbum(albumId)

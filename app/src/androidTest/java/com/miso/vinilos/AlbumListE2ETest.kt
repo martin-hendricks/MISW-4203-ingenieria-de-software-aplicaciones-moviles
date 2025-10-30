@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.viewmodels.ProfileViewModel
+import kotlinx.coroutines.Dispatchers
 
 /**
  * Pruebas E2E con Espresso para el flujo completo de listado de álbumes
@@ -51,7 +52,7 @@ class AlbumListE2ETest {
     private fun createTestViewModel(): AlbumViewModel {
         val testApiService = TestRetrofitClient.createTestApiService(mockWebServerRule.baseUrl)
         val testRepository = com.miso.vinilos.model.repository.AlbumRepository(testApiService)
-        return com.miso.vinilos.viewmodels.AlbumViewModel(testRepository)
+        return com.miso.vinilos.viewmodels.AlbumViewModel(testRepository, Dispatchers.Unconfined)
     }
 
     /**

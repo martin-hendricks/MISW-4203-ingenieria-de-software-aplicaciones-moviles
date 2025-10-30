@@ -176,4 +176,79 @@ object TestDataFactory {
             performers = listOf(createTestPerformer(4, "Bob Dylan"))
         )
     }
+
+    /**
+     * Crea un comentario de prueba
+     */
+    fun createTestComment(id: Int = 1, description: String = "Gran álbum!", rating: Int = 5): Comment {
+        return Comment(
+            id = id,
+            description = description,
+            rating = rating
+        )
+    }
+
+    /**
+     * Crea una lista de comentarios de prueba
+     */
+    fun createTestComments(): List<Comment> {
+        return listOf(
+            createTestComment(1, "Excelente álbum, una obra maestra del rock", 5),
+            createTestComment(2, "Muy bueno, aunque prefiero sus trabajos anteriores", 4),
+            createTestComment(3, "Definitivamente uno de mis álbumes favoritos", 5)
+        )
+    }
+
+    /**
+     * Crea un álbum completo con todos los detalles para pruebas de detalle
+     */
+    fun createTestAlbumWithFullDetails(
+        id: Int = 1,
+        name: String = "Abbey Road",
+        cover: String = "https://example.com/abbey-road.jpg",
+        description: String = "El último álbum grabado por The Beatles"
+    ): Album {
+        val calendar = Calendar.getInstance()
+        calendar.set(1969, Calendar.SEPTEMBER, 26)
+
+        return Album(
+            id = id,
+            name = name,
+            cover = cover,
+            releaseDate = calendar.time,
+            description = description,
+            genre = createTestGenre(),
+            recordLabel = createTestRecordLabel(),
+            tracks = createTestTracks(),
+            performers = listOf(createTestPerformer(1, "The Beatles")),
+            comments = createTestComments()
+        )
+    }
+
+    /**
+     * Crea un álbum sin tracks para pruebas
+     */
+    fun createAlbumWithoutTracks(): Album {
+        return createTestAlbum(
+            id = 9,
+            name = "Album Without Tracks",
+            cover = "https://example.com/no-tracks.jpg",
+            description = "Álbum sin canciones registradas",
+            tracks = null
+        )
+    }
+
+    /**
+     * Crea un álbum sin comentarios para pruebas
+     */
+    fun createAlbumWithoutComments(): Album {
+        return createTestAlbum(
+            id = 10,
+            name = "Album Without Comments",
+            cover = "https://example.com/no-comments.jpg",
+            description = "Álbum sin comentarios",
+            tracks = createTestTracks(),
+            performers = listOf(createTestPerformer(1, "The Beatles"))
+        )
+    }
 }
