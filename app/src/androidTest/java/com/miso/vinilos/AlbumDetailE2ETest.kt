@@ -4,6 +4,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.miso.vinilos.config.TestRetrofitClient
@@ -45,6 +48,30 @@ class AlbumDetailE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+    /**
+     * Desplaza la lista hasta un texto objetivo y asegura su visibilidad
+     */
+    private fun scrollToAndAssertVisible(text: String) {
+        // Intenta scrollear el contenedor si existe; si no, hace scroll directo al nodo
+        val triedContainer = runCatching {
+            composeTestRule.onNodeWithTag("albumDetailList")
+                .performScrollToNode(hasText(text, substring = true))
+        }
+        if (triedContainer.isFailure) {
+            runCatching {
+                composeTestRule.onNodeWithText(text, substring = true)
+                    .performScrollTo()
+            }
+        }
+        // Espera a que el nodo esté presente y visible
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+            composeTestRule.onAllNodesWithText(text, substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText(text, substring = true, useUnmergedTree = true)
+            .assertIsDisplayed()
+    }
+
 
     /**
      * Helper function to create a test ViewModel with MockWebServer
@@ -93,9 +120,11 @@ class AlbumDetailE2ETest {
         // Dar clic en el primer álbum para navegar al detalle
         composeTestRule.onNodeWithText("Abbey Road").performClick()
 
-        // Assert
-        composeTestRule.waitForIdle()
-        Thread.sleep(1000) // Esperar a que la navegación y carga se completen
+        // Assert - esperar a que cargue la pantalla de detalle
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Verificar que estamos en la pantalla de detalle buscando elementos únicos del detalle
         // El título "Detalles del Álbum" solo aparece en la pantalla de detalle
@@ -106,6 +135,9 @@ class AlbumDetailE2ETest {
 
         // Verificar la descripción
         composeTestRule.onNodeWithText("El último álbum grabado por The Beatles", useUnmergedTree = true, substring = true).assertExists()
+
+        // Asegurar que la sección de comentarios esté a la vista antes de validar
+        scrollToAndAssertVisible("Comentarios")
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
 
         // Verificar que la descripción está visible
@@ -118,7 +150,10 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testLoadingStateDisplay() {
-        // Arrange - Configurar respuesta con delay para simular carga lenta
+        // Arrange - Primero lista de álbumes, luego detalle con delay para simular carga lenta
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createTimeoutResponse()
         )
@@ -146,7 +181,10 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testErrorStateDisplay() {
-        // Arrange
+        // Arrange - Primero lista de álbumes, luego error en detalle
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createServerErrorResponse()
         )
@@ -164,8 +202,11 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert: esperar a que aparezca la sección de detalles para asegurar que cargó
+        composeTestRule.waitUntil(timeoutMillis = 2_500) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Verificar que el mensaje de error está visible
         CustomMatchers.verifyAlbumDetailErrorMessageIsVisible(composeTestRule)
@@ -183,7 +224,10 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testErrorRetryFunctionality() {
-        // Arrange - Primero error, luego éxito
+        // Arrange - Lista de álbumes, luego error en detalle y finalmente éxito
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createServerErrorResponse()
         )
@@ -205,8 +249,11 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert - Verificar estado de error inicial
-        composeTestRule.waitForIdle()
+        // Assert - Verificar estado de error inicial (esperar a que aparezca)
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+            composeTestRule.onAllNodesWithText("Error al cargar el álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         CustomMatchers.verifyAlbumDetailErrorMessageIsVisible(composeTestRule)
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
 
@@ -214,7 +261,10 @@ class AlbumDetailE2ETest {
         composeTestRule.onNodeWithText("Reintentar").performClick()
 
         // Assert - Verificar que el álbum se carga después del reintento
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyPerformerIsVisible(composeTestRule, "The Beatles")
     }
@@ -225,8 +275,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testAlbumDetailsInformationDisplay() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle exitoso
         val testAlbum = TestDataFactory.createTestAlbumWithFullDetails()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(testAlbum)
         )
@@ -244,8 +297,11 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert - esperar a que cargue el detalle
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Verificar información básica
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
@@ -264,8 +320,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testTrackListDisplay() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle exitoso
         val testAlbum = TestDataFactory.createTestAlbumWithFullDetails()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(testAlbum)
         )
@@ -283,8 +342,13 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert - esperar a que cargue el detalle y desplazar a la sección
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        scrollToAndAssertVisible("Lista de Canciones")
+
 
         // Verificar que la sección de tracks está visible
         CustomMatchers.verifyTrackListSectionIsVisible(composeTestRule)
@@ -306,8 +370,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testCommentsDisplay() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle exitoso
         val testAlbum = TestDataFactory.createTestAlbumWithFullDetails()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(testAlbum)
         )
@@ -325,8 +392,14 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert - esperar a que cargue el detalle
+        composeTestRule.waitUntil(timeoutMillis = 3_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Asegurar que la sección de comentarios esté a la vista
+        scrollToAndAssertVisible("Comentarios")
 
         // Verificar que la sección de comentarios está visible
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
@@ -347,8 +420,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testAlbumWithoutTracks() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle del álbum sin tracks
         val albumWithoutTracks = TestDataFactory.createAlbumWithoutTracks()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(albumWithoutTracks)
         )
@@ -366,8 +442,11 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert - esperar a que cargue el detalle
+        composeTestRule.waitUntil(timeoutMillis = 3_000) {
+            composeTestRule.onAllNodesWithText("Lista de Canciones")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Verificar que el álbum está visible
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Album Without Tracks")
@@ -385,8 +464,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testAlbumWithoutComments() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle del álbum sin comentarios
         val albumWithoutComments = TestDataFactory.createAlbumWithoutComments()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(albumWithoutComments)
         )
@@ -404,8 +486,12 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert - esperar a que cargue el detalle y llevar comentarios a vista
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        scrollToAndAssertVisible("Comentarios")
 
         // Verificar que el álbum está visible
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Album Without Comments")
@@ -423,8 +509,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testAlbumWithoutPerformers() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle del álbum sin performers
         val albumWithoutPerformers = TestDataFactory.createAlbumWithoutPerformers()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(albumWithoutPerformers)
         )
@@ -442,8 +531,11 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert - esperar a que cargue el detalle
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Verificar que el álbum está visible
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Unknown Artist Album")
@@ -458,7 +550,10 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testAlbumNotFoundError() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego 404 en detalle
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createNotFoundResponse()
         )
@@ -476,8 +571,11 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
+        // Assert - esperar a que aparezca el estado de error
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+            composeTestRule.onAllNodesWithText("Error al cargar el álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Verificar que el mensaje de error está visible
         CustomMatchers.verifyAlbumDetailErrorMessageIsVisible(composeTestRule)
@@ -492,8 +590,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testBackButtonFunctionality() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle exitoso
         val testAlbum = TestDataFactory.createTestAlbumWithFullDetails()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(testAlbum)
         )
@@ -531,8 +632,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testScrollFunctionalityInDetailScreen() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle exitoso
         val testAlbum = TestDataFactory.createTestAlbumWithFullDetails()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(testAlbum)
         )
@@ -550,15 +654,17 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert
-        composeTestRule.waitForIdle()
-
-        // Verificar que el contenido superior está visible
+        // Assert - esperar a que cargue el detalle y asegurar encabezado visible
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        scrollToAndAssertVisible("Abbey Road")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyAlbumDetailsSectionIsVisible(composeTestRule)
 
         // Hacer scroll hacia abajo para ver los comentarios
-        composeTestRule.onNodeWithText("Comentarios").performScrollTo()
+        scrollToAndAssertVisible("Comentarios")
 
         // Verificar que los comentarios ahora están visibles
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
@@ -571,8 +677,11 @@ class AlbumDetailE2ETest {
      */
     @Test
     fun testCompleteAlbumInformationDisplay() {
-        // Arrange
+        // Arrange - Lista de álbumes y luego detalle exitoso
         val testAlbum = TestDataFactory.createTestAlbumWithFullDetails()
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(testAlbum)
         )
@@ -593,23 +702,24 @@ class AlbumDetailE2ETest {
         // Assert
         composeTestRule.waitForIdle()
 
-        // Verificar header
-        CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
+        // Verificar header (forzar scroll para evitar falsos negativos)
+        scrollToAndAssertVisible("Abbey Road")
         CustomMatchers.verifyPerformerIsVisible(composeTestRule, "The Beatles")
 
         // Verificar detalles
+        scrollToAndAssertVisible("Detalles del Álbum")
         CustomMatchers.verifyAlbumDetailsSectionIsVisible(composeTestRule)
         CustomMatchers.verifyAlbumDescriptionIsVisible(composeTestRule, "El último álbum grabado")
         CustomMatchers.verifyGenreIsVisible(composeTestRule, "Rock")
-        CustomMatchers.verifyRecordLabelIsVisible(composeTestRule, "Sony")
+        CustomMatchers.verifyRecordLabelIsVisible(composeTestRule, "Sony Music")
 
         // Hacer scroll para verificar tracks
-        composeTestRule.onNodeWithText("Lista de Canciones").performScrollTo()
+        scrollToAndAssertVisible("Lista de Canciones")
         CustomMatchers.verifyTrackListSectionIsVisible(composeTestRule)
         CustomMatchers.verifyTrackIsVisible(composeTestRule, "Come Together")
 
         // Hacer scroll para verificar comentarios
-        composeTestRule.onNodeWithText("Comentarios").performScrollTo()
+        scrollToAndAssertVisible("Comentarios")
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
         CustomMatchers.verifyCommentIsVisible(composeTestRule, "Excelente álbum")
     }

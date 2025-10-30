@@ -1,5 +1,6 @@
 package com.miso.vinilos.config
 
+import com.google.gson.GsonBuilder
 import com.miso.vinilos.model.network.AlbumApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -33,10 +34,16 @@ object TestRetrofitClient {
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
         
+        // Alinear el formato de fechas con el usado por la app y los helpers de test
+        val gson = GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .setLenient()
+            .create()
+
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
     

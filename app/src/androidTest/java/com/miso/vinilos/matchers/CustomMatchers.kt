@@ -82,7 +82,7 @@ object CustomMatchers {
      * Verifica que un álbum específico esté visible en la lista
      */
     fun verifyAlbumIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule, albumName: String): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText(albumName)
+        return composeTestRule.onNodeWithText(albumName, substring = true, useUnmergedTree = true)
             .assertIsDisplayed()
     }
     
@@ -209,24 +209,27 @@ object CustomMatchers {
      * Verifica que la sección "Detalles del Álbum" esté visible
      */
     fun verifyAlbumDetailsSectionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Detalles del Álbum")
-            .assert(hasText("Detalles del Álbum"))
+        val nodes = composeTestRule.onAllNodesWithText("Detalles del Álbum")
+        nodes.fetchSemanticsNodes().isNotEmpty()
+        return nodes[0].assert(hasText("Detalles del Álbum"))
     }
 
     /**
      * Verifica que la sección "Lista de Canciones" esté visible
      */
     fun verifyTrackListSectionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Lista de Canciones")
-            .assert(hasText("Lista de Canciones"))
+        val nodes = composeTestRule.onAllNodesWithText("Lista de Canciones")
+        nodes.fetchSemanticsNodes().isNotEmpty()
+        return nodes[0].assert(hasText("Lista de Canciones"))
     }
 
     /**
      * Verifica que la sección "Comentarios" esté visible
      */
     fun verifyCommentsSectionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Comentarios")
-            .assert(hasText("Comentarios"))
+        val nodes = composeTestRule.onAllNodesWithText("Comentarios")
+        nodes.fetchSemanticsNodes().isNotEmpty()
+        return nodes[0].assert(hasText("Comentarios"))
     }
 
     /**
@@ -257,8 +260,11 @@ object CustomMatchers {
      * Verifica que un rating esté visible
      */
     fun verifyRatingIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule, rating: Int): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Rating: $rating/5")
-            .assert(hasText("Rating: $rating/5"))
+        val nodes = composeTestRule.onAllNodesWithText("Rating: $rating/5")
+        // Asegurar que existe al menos un nodo con ese rating
+        nodes.fetchSemanticsNodes().isNotEmpty()
+        // Validar el primero encontrado (puede haber múltiples ratings iguales)
+        return nodes[0].assert(hasText("Rating: $rating/5"))
     }
 
     /**
