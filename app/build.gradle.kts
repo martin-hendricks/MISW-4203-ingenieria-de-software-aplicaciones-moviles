@@ -1,17 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("com.google.devtools.ksp") version "1.9.0-1.0.13"  // Para Room
+    alias(libs.plugins.compose.compiler)
+    id("com.google.devtools.ksp") version "2.0.21-1.0.25"  // Para Room
 }
 
 android {
-    namespace = "com.example.vinilos"
-    compileSdk = 34
+    namespace = "com.miso.vinilos"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.vinilos"
-        minSdk = 24
-        targetSdk = 34
+        applicationId = "com.miso.vinilos"
+        minSdk = 21
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -40,9 +41,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -63,6 +61,7 @@ dependencies {
     
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -97,8 +96,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.espresso.intents)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.mockwebserver)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
