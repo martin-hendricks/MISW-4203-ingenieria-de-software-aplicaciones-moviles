@@ -202,9 +202,9 @@ class AlbumDetailE2ETest {
             }
         }
 
-        // Assert: esperar a que aparezca la sección de detalles para asegurar que cargó
+        // Assert: esperar a que aparezca el mensaje de error
         composeTestRule.waitUntil(timeoutMillis = 2_500) {
-            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+            composeTestRule.onAllNodesWithText("Error al cargar el álbum")
                 .fetchSemanticsNodes().isNotEmpty()
         }
 
