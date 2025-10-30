@@ -20,11 +20,19 @@ import com.miso.vinilos.viewmodels.ProfileViewModel
 
 /**
  * Configura el NavHost con todas las rutas de navegación de la aplicación
+ *
+ * @param navController Controlador de navegación
+ * @param albumViewModel ViewModel de álbumes (opcional, para testing)
+ * @param profileViewModel ViewModel de perfil (opcional, para testing)
  */
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(
+    navController: NavHostController,
+    albumViewModel: AlbumViewModel? = null,
+    profileViewModel: ProfileViewModel? = null
+) {
     // ViewModels compartidos entre pantallas
-    val profileViewModel: ProfileViewModel = viewModel()
+    val sharedProfileViewModel = profileViewModel ?: viewModel()
     
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,  // Background for all screens
@@ -39,10 +47,10 @@ fun AppNavigation(navController: NavHostController) {
         ) {
             // Pantalla de Álbumes
             composable(NavigationRoutes.Albums.route) {
-                val albumViewModel: AlbumViewModel = viewModel()
+                val sharedAlbumViewModel = albumViewModel ?: viewModel()
                 AlbumListScreen(
-                    albumViewModel = albumViewModel,
-                    profileViewModel = profileViewModel,
+                    albumViewModel = sharedAlbumViewModel,
+                    profileViewModel = sharedProfileViewModel,
                     onAlbumClick = { album ->
                         navController.navigate(NavigationRoutes.AlbumDetail.createRoute(album.id))
                     }
@@ -77,7 +85,7 @@ fun AppNavigation(navController: NavHostController) {
             
             // Pantalla de Perfil
             composable(NavigationRoutes.Profile.route) {
-                ProfileScreen(viewModel = profileViewModel)
+                ProfileScreen(viewModel = sharedProfileViewModel)
             }
         }
     }
