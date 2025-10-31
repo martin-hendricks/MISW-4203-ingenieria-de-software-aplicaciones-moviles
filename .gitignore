@@ -64,6 +64,14 @@ captures/
 .idea/inspectionProfiles/
 .idea/navEditor.xml
 
+# Kotlin
+*.kt.swp
+*.kts.swp
+.kotlin/
+kotlin-classes/
+**/.kotlin/
+**/kotlin-classes/
+
 # Keystore files
 *.jks
 *.keystore
@@ -220,3 +228,83 @@ yarn-error.log*
 
 # virtual machine crash logs
 hs_err_pid*
+
+# ========================================
+# Agentes de IA y Asistentes de Código
+# ========================================
+
+# GitHub Copilot
+.github/copilot/
+**/.github/copilot/
+.copilot/
+**/.copilot/
+
+# Cursor AI
+.cursor/
+**/.cursor/
+.cursorrules
+**/.cursorrules
+
+# Tabnine
+.tabnine/
+**/.tabnine/
+
+# Codeium
+.codeium/
+**/.codeium/
+
+# Amazon CodeWhisperer
+.aws/
+.aws-sam/
+
+# JetBrains AI Assistant
+.idea/ai/
+.idea/aiAssistant/
+
+# Continue.dev
+.continue/
+**/.continue/
+
+# Sourcegraph Cody
+.cody/
+**/.cody/
+
+# Replit AI
+.replit
+.replitrc
+
+# ChatGPT / OpenAI configs
+.openai/
+**/.openai/
+.chatgpt/
+**/.chatgpt/
+
+# Bard / Gemini configs
+.bard/
+**/.bard/
+.gemini/
+**/.gemini/
+
+# Anthropic Claude configs
+.anthropic/
+**/.anthropic/
+.claude/
+**/.claude/
+
+# AI configuration files
+ai-config.json
+ai-settings.json
+.ai-settings
+.aiconfig
+**/.aiconfig
+
+# AI prompt caches
+.ai-cache/
+**/.ai-cache/
+ai-prompts/
+**ai-prompts/
+
+# AI generated files markers
+*.ai-generated
+.ai-generated/
+**/.ai-generated/
