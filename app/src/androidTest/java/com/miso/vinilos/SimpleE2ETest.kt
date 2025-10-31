@@ -8,6 +8,7 @@ import androidx.test.filters.LargeTest
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import androidx.navigation.compose.rememberNavController
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,28 +24,29 @@ class SimpleE2ETest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    /**
-     * Test: Verificar que la aplicación se inicia y muestra elementos básicos
-     */
-    @Test
-    fun testAppStartsAndShowsBasicElements() {
-        // Act
+    @Before
+    fun setUp() {
+        // Configurar el contenido antes de cada prueba
         composeTestRule.setContent {
             VinilosTheme(dynamicColor = false) {
                 val navController = rememberNavController()
                 AppNavigation(navController = navController)
             }
         }
-
-        // Assert
         composeTestRule.waitForIdle()
-        
+    }
+
+    /**
+     * Test: Verificar que la aplicación se inicia y muestra elementos básicos
+     */
+    @Test
+    fun testAppStartsAndShowsBasicElements() {
         // Verificar que la aplicación se carga
         composeTestRule.onRoot().assertExists()
-        
+
         // Verificar que hay exactamente 2 nodos con "Álbumes" (header + navigation)
         composeTestRule.onAllNodesWithText("Álbumes").assertCountEquals(2)
-        
+
         // Verificar que las pestañas de navegación están presentes
         composeTestRule.onNodeWithText("Artistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Coleccionistas").assertIsDisplayed()
@@ -56,17 +58,6 @@ class SimpleE2ETest {
      */
     @Test
     fun testNavigationWorks() {
-        // Act
-        composeTestRule.setContent {
-            VinilosTheme(dynamicColor = false) {
-                val navController = rememberNavController()
-                AppNavigation(navController = navController)
-            }
-        }
-
-        // Assert
-        composeTestRule.waitForIdle()
-
         // Verificar que estamos en la pantalla de Álbumes (por defecto)
         composeTestRule.onAllNodesWithText("Álbumes")[0].assertIsDisplayed() // Header
 
@@ -95,22 +86,11 @@ class SimpleE2ETest {
      */
     @Test
     fun testBasicUIInteractions() {
-        // Act
-        composeTestRule.setContent {
-            VinilosTheme(dynamicColor = false) {
-                val navController = rememberNavController()
-                AppNavigation(navController = navController)
-            }
-        }
-
-        // Assert
-        composeTestRule.waitForIdle()
-        
         // Verificar que podemos interactuar con elementos básicos
         composeTestRule.onNodeWithText("Artistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Coleccionistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Perfil").assertIsDisplayed()
-        
+
         // Verificar que los elementos son clickeables
         composeTestRule.onNodeWithText("Artistas").assertHasClickAction()
         composeTestRule.onNodeWithText("Coleccionistas").assertHasClickAction()
