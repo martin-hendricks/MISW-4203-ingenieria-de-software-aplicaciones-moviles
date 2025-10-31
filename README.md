@@ -307,11 +307,6 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Ejecución de Pruebas
 
-### Pruebas Unitarias
-
-```bash
-./gradlew test
-```
 
 ### Pruebas de Instrumentación (E2E)
 
@@ -368,37 +363,6 @@ app/src/
 │       └── rules/              # Reglas de prueba (MockWebServer)
 └── test/                       # Pruebas unitarias
 ```
-
----
-
-## Historias de Usuario Implementadas
-
-### HU001 - Consultar Catálogo de Álbumes
-**Como** usuario visitante
-**Quiero** navegar el catálogo de álbumes
-**Para** escoger los que más me interesan
-
-- ✓ Visualización del catálogo completo
-- ✓ Estados de carga y error
-- ✓ Scroll y navegación
-- ✓ 14 pruebas E2E
-
-**Documentación:** [HU001-Escenarios-Pruebas-E2E.md](docs/HU001-Escenarios-Pruebas-E2E.md)
-
-### HU002 - Consultar Detalle de Álbum
-**Como** usuario visitante o coleccionista
-**Quiero** consultar el detalle completo de un álbum
-**Para** conocer toda su información (descripción, canciones, comentarios, artistas, etc.)
-
-- ✓ Visualización de detalle completo
-- ✓ Información del álbum (cover, nombre, artistas)
-- ✓ Detalles (descripción, género, sello, fecha)
-- ✓ Lista de canciones con duraciones
-- ✓ Comentarios con ratings
-- ✓ Manejo de casos edge (sin tracks, sin comentarios, etc.)
-- ✓ 14 pruebas E2E
-
-**Documentación:** [HU002-Escenarios-Pruebas-E2E.md](docs/HU002-Escenarios-Pruebas-E2E.md)
 
 ---
 
