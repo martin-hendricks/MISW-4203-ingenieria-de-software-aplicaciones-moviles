@@ -366,22 +366,6 @@ app/src/
 
 ---
 
-## Tecnologías Utilizadas
-
-- **Kotlin** 1.9.0
-- **Jetpack Compose** - UI moderna y declarativa
-- **Material Design 3** - Componentes de UI
-- **Retrofit** - Cliente HTTP para API REST
-- **OkHttp** - Logging de peticiones HTTP
-- **Coil** - Carga de imágenes
-- **Coroutines** - Programación asíncrona
-- **Navigation Compose** - Navegación entre pantallas
-- **ViewModel y LiveData** - Arquitectura MVVM
-- **MockWebServer** - Pruebas E2E con mock de API
-- **Espresso y Compose Testing** - Framework de pruebas
-
----
-
 ## Configuración de Red
 
 La aplicación está configurada para conectarse a:
