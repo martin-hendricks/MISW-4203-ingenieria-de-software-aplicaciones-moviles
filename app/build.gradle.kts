@@ -103,12 +103,106 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.mockwebserver)
     androidTestImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(libs.androidx.test.screenshot)
 
-    // Screenshot testing
+    // Screenshot testing - using custom implementation
     androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation("androidx.test.ext:junit-ktx:1.2.1")
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+// Task para copiar screenshots del dispositivo al directorio de reportes
+tasks.register("copyScreenshotsToReports") {
+    description = "Copia las screenshots del dispositivo al directorio de reportes de tests"
+    group = "verification"
+    
+    doLast {
+        val adbPath = project.findProperty("android.sdk.dir")?.toString()?.let { 
+            "$it/platform-tools/adb" 
+        } ?: run {
+            // Intentar encontrar adb en ubicaciones comunes
+            val homeDir = System.getProperty("user.home")
+            val possiblePaths = listOf(
+                "$homeDir/Library/Android/sdk/platform-tools/adb",
+                "$homeDir/Android/Sdk/platform-tools/adb",
+                System.getenv("ANDROID_HOME")?.let { "$it/platform-tools/adb" }
+            )
+            possiblePaths.firstOrNull { File(it).exists() } ?: "adb"
+        }
+        
+        val adb = if (adbPath.endsWith("adb")) {
+            // Si ya es solo "adb", asumir que está en PATH
+            "adb"
+        } else {
+            adbPath
+        }
+        
+        val reportsDir = File("${project.buildDir}/reports/androidTests/connected/debug")
+        val screenshotsDir = File(reportsDir, "screenshots")
+        screenshotsDir.mkdirs()
+        
+        println("📱 Copiando screenshots del dispositivo...")
+        println("   ADB: $adb")
+        println("   Destino: ${screenshotsDir.absolutePath}")
+        
+        // Intentar copiar desde almacenamiento externo
+        val externalScreenshotPath = "/sdcard/Pictures/screenshots"
+        val process = ProcessBuilder(adb, "pull", externalScreenshotPath, screenshotsDir.absolutePath)
+            .redirectErrorStream(true)
+            .start()
+        
+        val exitCode = process.waitFor()
+        
+        if (exitCode != 0) {
+            println("⚠️  No se encontraron screenshots en almacenamiento externo")
+            println("   Intentando almacenamiento interno...")
+            
+            // Intentar copiar desde almacenamiento interno
+            val internalScreenshotPath = "/data/data/com.miso.vinilos/files/screenshots"
+            
+            // Primero copiar a un lugar accesible en el dispositivo
+            ProcessBuilder(adb, "shell", "run-as", "com.miso.vinilos", "cp", "-r", internalScreenshotPath, "/sdcard/Download/screenshots-temp")
+                .start()
+                .waitFor()
+            
+            // Luego copiar desde ahí
+            ProcessBuilder(adb, "pull", "/sdcard/Download/screenshots-temp", screenshotsDir.absolutePath)
+                .redirectErrorStream(true)
+                .start()
+                .waitFor()
+            
+            // Limpiar archivos temporales
+            ProcessBuilder(adb, "shell", "rm", "-rf", "/sdcard/Download/screenshots-temp")
+                .start()
+                .waitFor()
+        }
+        
+        val screenshotFiles = screenshotsDir.listFiles { file -> 
+            file.name.endsWith(".png", ignoreCase = true)
+        }
+        
+        if (screenshotFiles != null && screenshotFiles.isNotEmpty()) {
+            println("✅ ${screenshotFiles.size} screenshots copiadas exitosamente")
+            screenshotFiles.forEach { file ->
+                println("   - ${file.name}")
+            }
+        } else {
+            println("⚠️  No se encontraron screenshots para copiar")
+            println("   Asegúrate de haber ejecutado los tests primero")
+        }
+    }
+}
+
+// Hacer que copyScreenshotsToReports se ejecute después de connectedAndroidTest
+// Usamos afterEvaluate para que el task esté disponible cuando se configure
+afterEvaluate {
+    tasks.named("connectedAndroidTest") {
+        finalizedBy("copyScreenshotsToReports")
+    }
+    
+    // También configurar para el task específico de debug si existe
+    tasks.findByName("connectedDebugAndroidTest")?.let {
+        it.finalizedBy("copyScreenshotsToReports")
+    }
 }

@@ -45,7 +45,6 @@ espressoIntents = "3.7.0"
 testRunner = "1.6.2"
 testCore = "1.6.2"
 coroutinesTest = "1.9.0"
-screenshot = "1.1.0"
 
 # Compose Compiler
 composeCompiler = "1.5.15"
@@ -106,7 +105,6 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
 androidx-espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espressoIntents" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
-androidx-test-screenshot = { group = "androidx.test.screenshot", name = "screenshot", version.ref = "screenshot" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

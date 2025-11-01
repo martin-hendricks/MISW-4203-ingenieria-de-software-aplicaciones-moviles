@@ -8,6 +8,7 @@ import androidx.test.filters.LargeTest
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import androidx.navigation.compose.rememberNavController
+import com.miso.vinilos.rules.ScreenshotTestRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -23,6 +24,11 @@ class SimpleE2ETest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
 
     @Before
     fun setUp() {
@@ -41,6 +47,9 @@ class SimpleE2ETest {
      */
     @Test
     fun testAppStartsAndShowsBasicElements() {
+        // Capturar screenshot del estado inicial
+        screenshotTestRule.takeScreenshot("01-inicio")
+        
         // Verificar que la aplicación se carga
         composeTestRule.onRoot().assertExists()
 
@@ -51,6 +60,9 @@ class SimpleE2ETest {
         composeTestRule.onNodeWithText("Artistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Coleccionistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Perfil").assertIsDisplayed()
+        
+        // Capturar screenshot mostrando elementos básicos
+        screenshotTestRule.takeScreenshot("02-elementos-verificados")
     }
 
     /**
@@ -58,12 +70,18 @@ class SimpleE2ETest {
      */
     @Test
     fun testNavigationWorks() {
+        // Capturar screenshot inicial
+        screenshotTestRule.takeScreenshot("01-pantalla-inicial")
+        
         // Verificar que estamos en la pantalla de Álbumes (por defecto)
         composeTestRule.onAllNodesWithText("Álbumes")[0].assertIsDisplayed() // Header
 
         // Hacer clic en Perfil (pestaña del bottom navigation)
         composeTestRule.onNodeWithText("Perfil").performClick()
         composeTestRule.waitForIdle()
+        
+        // Capturar screenshot en Perfil
+        screenshotTestRule.takeScreenshot("02-navegado-a-perfil")
 
         // Verificar que la navegación funciona (no hay crash)
         composeTestRule.onRoot().assertExists()
@@ -76,9 +94,15 @@ class SimpleE2ETest {
             composeTestRule.onNodeWithText("Álbumes").performClick()
         }
         composeTestRule.waitForIdle()
+        
+        // Capturar screenshot de vuelta a Álbumes
+        screenshotTestRule.takeScreenshot("03-vuelto-a-albumes")
 
         // Verificar que volvimos
         composeTestRule.onRoot().assertExists()
+        
+        // Captura final
+        screenshotTestRule.takeScreenshot("04-navegacion-completa")
     }
 
     /**
@@ -86,14 +110,23 @@ class SimpleE2ETest {
      */
     @Test
     fun testBasicUIInteractions() {
+        // Capturar screenshot inicial
+        screenshotTestRule.takeScreenshot("01-pantalla-inicial")
+        
         // Verificar que podemos interactuar con elementos básicos
         composeTestRule.onNodeWithText("Artistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Coleccionistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Perfil").assertIsDisplayed()
+        
+        // Capturar screenshot con elementos visibles
+        screenshotTestRule.takeScreenshot("02-elementos-visibles")
 
         // Verificar que los elementos son clickeables
         composeTestRule.onNodeWithText("Artistas").assertHasClickAction()
         composeTestRule.onNodeWithText("Coleccionistas").assertHasClickAction()
         composeTestRule.onNodeWithText("Perfil").assertHasClickAction()
+        
+        // Captura final
+        screenshotTestRule.takeScreenshot("03-interacciones-verificadas")
     }
 }

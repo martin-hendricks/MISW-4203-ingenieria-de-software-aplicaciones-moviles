@@ -26,7 +26,9 @@ class BasicE2ETest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     @get:Rule
-    val screenshotTestRule = ScreenshotTestRule()
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
 
     /**
      * Test básico: Verificar que la aplicación se inicia correctamente
@@ -44,9 +46,15 @@ class BasicE2ETest {
         // Assert
         composeTestRule.waitForIdle()
         
+        // Capturar screenshot del estado inicial
+        screenshotTestRule.takeScreenshot("01-inicio")
+        
         // Verificar que la aplicación se carga (no hay crash)
         // Esto es un test básico para verificar que la infraestructura funciona
         composeTestRule.onRoot().assertExists()
+        
+        // Capturar screenshot final después de verificar
+        screenshotTestRule.takeScreenshot("02-verificado")
     }
 
     /**
@@ -70,6 +78,9 @@ class BasicE2ETest {
         composeTestRule.onAllNodesWithText("Artistas").assertCountEquals(1)
         composeTestRule.onAllNodesWithText("Coleccionistas").assertCountEquals(1)
         composeTestRule.onAllNodesWithText("Perfil").assertCountEquals(1)
+        
+        // Capturar screenshot mostrando la navegación
+        screenshotTestRule.takeScreenshot("navegacion-visible")
     }
 
     /**
@@ -91,11 +102,20 @@ class BasicE2ETest {
         // Verificar que estamos en la pestaña de Álbumes por defecto
         composeTestRule.onAllNodesWithText("Álbumes")[0].assertIsDisplayed() // Header
         
+        // Capturar screenshot en pantalla inicial
+        screenshotTestRule.takeScreenshot("01-pantalla-albumes")
+        
         // Intentar hacer clic en la pestaña de Perfil
         composeTestRule.onNodeWithText("Perfil").performClick()
         composeTestRule.waitForIdle()
         
+        // Capturar screenshot después de navegar a Perfil
+        screenshotTestRule.takeScreenshot("02-pantalla-perfil")
+        
         // Verificar que la navegación funciona (no hay crash)
         composeTestRule.onRoot().assertExists()
+        
+        // Capturar screenshot final
+        screenshotTestRule.takeScreenshot("03-navegacion-completada")
     }
 }
