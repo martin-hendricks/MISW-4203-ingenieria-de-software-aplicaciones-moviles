@@ -53,6 +53,11 @@ class SimpleE2ETest {
         // Verificar que la aplicación se carga
         composeTestRule.onRoot().assertExists()
 
+        // Esperar a que aparezcan las pestañas de navegación (esto indica que la UI está lista)
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Álbumes").fetchSemanticsNodes().size >= 2
+        }
+
         // Verificar que hay exactamente 2 nodos con "Álbumes" (header + navigation)
         composeTestRule.onAllNodesWithText("Álbumes").assertCountEquals(2)
 
@@ -72,7 +77,12 @@ class SimpleE2ETest {
     fun testNavigationWorks() {
         // Capturar screenshot inicial
         screenshotTestRule.takeScreenshot("01-pantalla-inicial")
-        
+
+        // Esperar a que la UI esté completamente cargada
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Álbumes").fetchSemanticsNodes().size >= 2
+        }
+
         // Verificar que estamos en la pantalla de Álbumes (por defecto)
         composeTestRule.onAllNodesWithText("Álbumes")[0].assertIsDisplayed() // Header
 
@@ -112,7 +122,12 @@ class SimpleE2ETest {
     fun testBasicUIInteractions() {
         // Capturar screenshot inicial
         screenshotTestRule.takeScreenshot("01-pantalla-inicial")
-        
+
+        // Esperar a que la UI esté completamente cargada
+        composeTestRule.waitUntil(timeoutMillis = 5000) {
+            composeTestRule.onAllNodesWithText("Álbumes").fetchSemanticsNodes().size >= 2
+        }
+
         // Verificar que podemos interactuar con elementos básicos
         composeTestRule.onNodeWithText("Artistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Coleccionistas").assertIsDisplayed()
