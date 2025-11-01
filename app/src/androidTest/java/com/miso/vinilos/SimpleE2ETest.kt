@@ -5,10 +5,16 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import com.miso.vinilos.config.TestRetrofitClient
+import com.miso.vinilos.helpers.JsonResponseHelper
+import com.miso.vinilos.helpers.TestDataFactory
+import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
+import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import androidx.navigation.compose.rememberNavController
-import com.miso.vinilos.rules.ScreenshotTestRule
+import kotlinx.coroutines.Dispatchers
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -16,7 +22,7 @@ import org.junit.runner.RunWith
 
 /**
  * Pruebas E2E simplificadas que verifican elementos básicos de la UI
- * sin depender del estado del API
+ * usando MockWebServer para evitar depender del backend real
  */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
@@ -26,17 +32,37 @@ class SimpleE2ETest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     @get:Rule
+    val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
     val screenshotTestRule = ScreenshotTestRule().apply {
         setComposeTestRule(composeTestRule)
     }
 
+    private fun createTestAlbumViewModel(): AlbumViewModel {
+        val testApiService = TestRetrofitClient.createTestApiService(mockWebServerRule.baseUrl)
+        val testRepository = com.miso.vinilos.model.repository.AlbumRepository(testApiService)
+        return AlbumViewModel(testRepository, Dispatchers.Unconfined)
+    }
+
     @Before
     fun setUp() {
-        // Configurar el contenido antes de cada prueba
+        // Encolar respuesta exitosa de álbumes para todos los tests
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(TestDataFactory.createTestAlbums())
+        )
+
+        // Crear ViewModel antes de setContent para evitar NetworkOnMainThreadException
+        val testAlbumViewModel = createTestAlbumViewModel()
+
+        // Configurar el contenido antes de cada prueba con ViewModels mockeados
         composeTestRule.setContent {
             VinilosTheme(dynamicColor = false) {
                 val navController = rememberNavController()
-                AppNavigation(navController = navController)
+                AppNavigation(
+                    navController = navController,
+                    albumViewModel = testAlbumViewModel
+                )
             }
         }
         composeTestRule.waitForIdle()

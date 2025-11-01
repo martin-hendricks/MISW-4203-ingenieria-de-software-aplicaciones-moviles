@@ -477,9 +477,12 @@ class AlbumDetailE2ETest {
 
         // Assert - esperar a que cargue el detalle
         composeTestRule.waitUntil(timeoutMillis = 3_000) {
-            composeTestRule.onAllNodesWithText("Lista de Canciones")
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
                 .fetchSemanticsNodes().isNotEmpty()
         }
+
+        // Asegurar que la sección de tracks esté a la vista
+        scrollToAndAssertVisible("Lista de Canciones")
 
         // Verificar que el álbum está visible
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Album Without Tracks")
