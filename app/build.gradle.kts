@@ -138,58 +138,160 @@ tasks.register("copyScreenshotsToReports") {
             adbPath
         }
         
-        val reportsDir = File("${project.buildDir}/reports/androidTests/connected/debug")
-        val screenshotsDir = File(reportsDir, "screenshots")
+        // Verificar que hay un dispositivo conectado
+        val devicesProcess = ProcessBuilder(adb, "devices")
+            .redirectErrorStream(true)
+            .start()
+        val devicesOutput = devicesProcess.inputStream.bufferedReader().readText()
+        devicesProcess.waitFor()
+        
+        if (!devicesOutput.contains("device")) {
+            println("⚠️  No hay dispositivos conectados.")
+            println("   El directorio de screenshots se creará pero estará vacío.")
+            println("   Ejecuta los tests con un dispositivo conectado para copiar las screenshots.")
+            // No retornamos aquí, creamos el directorio de todas formas
+        } else {
+            println("✅ Dispositivo(s) conectado(s) detectado(s)")
+        }
+        
+        // Crear el directorio de screenshots siempre, incluso si no hay dispositivo
+        val reportsDir = File("${project.buildDir}/reports/androidTests/connected")
+        reportsDir.mkdirs()
+        
+        // Buscar el directorio de debug o usar el primero disponible
+        val debugDir = reportsDir.listFiles()?.firstOrNull { it.isDirectory && it.name == "debug" } 
+            ?: reportsDir.listFiles()?.firstOrNull { it.isDirectory }
+            ?: File(reportsDir, "debug")
+        
+        debugDir.mkdirs()
+        val screenshotsDir = File(debugDir, "screenshots")
         screenshotsDir.mkdirs()
+        
+        println("📁 Directorio de screenshots creado: ${screenshotsDir.absolutePath}")
         
         println("📱 Copiando screenshots del dispositivo...")
         println("   ADB: $adb")
         println("   Destino: ${screenshotsDir.absolutePath}")
         
-        // Intentar copiar desde almacenamiento externo
+        // Primero verificar qué existe en el dispositivo
         val externalScreenshotPath = "/sdcard/Pictures/screenshots"
-        val process = ProcessBuilder(adb, "pull", externalScreenshotPath, screenshotsDir.absolutePath)
+        
+        // Verificar si el directorio existe en el dispositivo
+        val checkProcess = ProcessBuilder(adb, "shell", "test", "-d", externalScreenshotPath)
             .redirectErrorStream(true)
             .start()
+        val checkExitCode = checkProcess.waitFor()
         
-        val exitCode = process.waitFor()
+        var copied = false
         
-        if (exitCode != 0) {
-            println("⚠️  No se encontraron screenshots en almacenamiento externo")
-            println("   Intentando almacenamiento interno...")
+        if (checkExitCode == 0) {
+            // Listar archivos para ver qué hay
+            val listProcess = ProcessBuilder(adb, "shell", "ls", "-la", externalScreenshotPath)
+                .redirectErrorStream(true)
+                .start()
+            val listOutput = listProcess.inputStream.bufferedReader().readText()
+            listProcess.waitFor()
             
+            println("📋 Contenido del directorio en dispositivo:")
+            println(listOutput)
+            
+            // Intentar copiar desde almacenamiento externo
+            println("📥 Copiando desde almacenamiento externo...")
+            val pullProcess = ProcessBuilder(adb, "pull", externalScreenshotPath, screenshotsDir.absolutePath)
+                .redirectErrorStream(true)
+                .start()
+            
+            // Capturar la salida para debug
+            pullProcess.inputStream.bufferedReader().lines().forEach { line ->
+                println("   $line")
+            }
+            
+            val exitCode = pullProcess.waitFor()
+            
+            if (exitCode == 0) {
+                copied = true
+                println("✅ Copia desde almacenamiento externo exitosa")
+            } else {
+                println("⚠️  Error al copiar desde almacenamiento externo (código: $exitCode)")
+            }
+        } else {
+            println("⚠️  Directorio externo no existe, intentando interno...")
+        }
+        
+        if (!copied) {
             // Intentar copiar desde almacenamiento interno
             val internalScreenshotPath = "/data/data/com.miso.vinilos/files/screenshots"
             
-            // Primero copiar a un lugar accesible en el dispositivo
-            ProcessBuilder(adb, "shell", "run-as", "com.miso.vinilos", "cp", "-r", internalScreenshotPath, "/sdcard/Download/screenshots-temp")
-                .start()
-                .waitFor()
+            println("📥 Intentando copiar desde almacenamiento interno...")
             
-            // Luego copiar desde ahí
-            ProcessBuilder(adb, "pull", "/sdcard/Download/screenshots-temp", screenshotsDir.absolutePath)
+            // Verificar si existe
+            val checkInternalProcess = ProcessBuilder(adb, "shell", "run-as", "com.miso.vinilos", "test", "-d", internalScreenshotPath)
                 .redirectErrorStream(true)
                 .start()
-                .waitFor()
+            val checkInternalExitCode = checkInternalProcess.waitFor()
             
-            // Limpiar archivos temporales
-            ProcessBuilder(adb, "shell", "rm", "-rf", "/sdcard/Download/screenshots-temp")
-                .start()
-                .waitFor()
+            if (checkInternalExitCode == 0) {
+                // Listar archivos internos
+                val listInternalProcess = ProcessBuilder(adb, "shell", "run-as", "com.miso.vinilos", "ls", "-la", internalScreenshotPath)
+                    .redirectErrorStream(true)
+                    .start()
+                val listInternalOutput = listInternalProcess.inputStream.bufferedReader().readText()
+                listInternalProcess.waitFor()
+                
+                println("📋 Contenido del directorio interno en dispositivo:")
+                println(listInternalOutput)
+                
+                // Primero copiar a un lugar accesible en el dispositivo
+                val copyProcess = ProcessBuilder(adb, "shell", "run-as", "com.miso.vinilos", "cp", "-r", internalScreenshotPath, "/sdcard/Download/screenshots-temp")
+                    .redirectErrorStream(true)
+                    .start()
+                copyProcess.inputStream.bufferedReader().lines().forEach { line ->
+                    println("   Copy: $line")
+                }
+                val copyExitCode = copyProcess.waitFor()
+                
+                if (copyExitCode == 0) {
+                    // Luego copiar desde ahí
+                    val pullInternalProcess = ProcessBuilder(adb, "pull", "/sdcard/Download/screenshots-temp", screenshotsDir.absolutePath)
+                        .redirectErrorStream(true)
+                        .start()
+                    
+                    pullInternalProcess.inputStream.bufferedReader().lines().forEach { line ->
+                        println("   Pull: $line")
+                    }
+                    val pullInternalExitCode = pullInternalProcess.waitFor()
+                    
+                    if (pullInternalExitCode == 0) {
+                        copied = true
+                        println("✅ Copia desde almacenamiento interno exitosa")
+                    }
+                    
+                    // Limpiar archivos temporales
+                    ProcessBuilder(adb, "shell", "rm", "-rf", "/sdcard/Download/screenshots-temp")
+                        .start()
+                        .waitFor()
+                } else {
+                    println("⚠️  Error al copiar archivos internos al storage temporal")
+                }
+            } else {
+                println("⚠️  Directorio interno no existe o no se puede acceder")
+            }
         }
         
+        // Verificar qué archivos se copiaron
         val screenshotFiles = screenshotsDir.listFiles { file -> 
-            file.name.endsWith(".png", ignoreCase = true)
-        }
+            file.isFile && file.name.endsWith(".png", ignoreCase = true)
+        } ?: emptyArray()
         
-        if (screenshotFiles != null && screenshotFiles.isNotEmpty()) {
+        if (screenshotFiles.isNotEmpty()) {
             println("✅ ${screenshotFiles.size} screenshots copiadas exitosamente")
             screenshotFiles.forEach { file ->
-                println("   - ${file.name}")
+                println("   - ${file.name} (${file.length()} bytes)")
             }
         } else {
             println("⚠️  No se encontraron screenshots para copiar")
-            println("   Asegúrate de haber ejecutado los tests primero")
+            println("   Revisa los logs del test para ver dónde se guardaron las screenshots")
+            println("   Busca mensajes que contengan 'ScreenshotTestRule' en los logs")
         }
     }
 }
@@ -197,12 +299,27 @@ tasks.register("copyScreenshotsToReports") {
 // Hacer que copyScreenshotsToReports se ejecute después de connectedAndroidTest
 // Usamos afterEvaluate para que el task esté disponible cuando se configure
 afterEvaluate {
-    tasks.named("connectedAndroidTest") {
+    // Configurar para todos los tasks de tests conectados
+    tasks.matching { task ->
+        task.name.startsWith("connected") && task.name.contains("AndroidTest")
+    }.configureEach {
         finalizedBy("copyScreenshotsToReports")
     }
     
-    // También configurar para el task específico de debug si existe
-    tasks.findByName("connectedDebugAndroidTest")?.let {
-        it.finalizedBy("copyScreenshotsToReports")
+    // También configurar específicamente los tasks principales
+    try {
+        tasks.named("connectedAndroidTest") {
+            finalizedBy("copyScreenshotsToReports")
+        }
+    } catch (e: Exception) {
+        // El task puede no existir, eso está bien
+    }
+    
+    try {
+        tasks.named("connectedDebugAndroidTest") {
+            finalizedBy("copyScreenshotsToReports")
+        }
+    } catch (e: Exception) {
+        // El task puede no existir, eso está bien
     }
 }
