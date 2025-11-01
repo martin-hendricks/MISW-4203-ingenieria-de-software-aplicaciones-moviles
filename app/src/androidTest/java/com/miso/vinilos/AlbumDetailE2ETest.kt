@@ -14,6 +14,7 @@ import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
 import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.screens.AlbumDetailScreen
@@ -34,7 +35,7 @@ import org.junit.runner.RunWith
  * - Visualización de lista de canciones con sus duraciones
  * - Visualización de comentarios con ratings
  * - Manejo de casos edge (álbumes sin tracks, sin comentarios)
- * - Funcionalidad de reintento tras error
+ * - Funcionalidad de reintredsfsdnto tras error
  *
  * Las pruebas usan MockWebServer para simular respuestas del API
  * y siguen el mismo patrón que AlbumListE2ETest
@@ -48,6 +49,9 @@ class AlbumDetailE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
+val screenshotTestRule = ScreenshotTestRule()
     /**
      * Desplaza la lista hasta un texto objetivo y asegura su visibilidad
      */

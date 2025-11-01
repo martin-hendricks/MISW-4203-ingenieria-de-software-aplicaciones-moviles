@@ -8,6 +8,7 @@ import androidx.test.filters.LargeTest
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import androidx.navigation.compose.rememberNavController
+import com.miso.vinilos.rules.ScreenshotTestRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +24,9 @@ class BasicE2ETest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule()
 
     /**
      * Test básico: Verificar que la aplicación se inicia correctamente
