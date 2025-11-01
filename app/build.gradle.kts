@@ -117,6 +117,11 @@ tasks.register("copyScreenshotsToReports") {
     description = "Copia las screenshots del dispositivo al directorio de reportes de tests"
     group = "verification"
     
+    // Asegurar que siempre se ejecute, incluso si falla
+    doFirst {
+        println("🚀 Iniciando copia de screenshots...")
+    }
+    
     doLast {
         val adbPath = project.findProperty("android.sdk.dir")?.toString()?.let { 
             "$it/platform-tools/adb" 
@@ -126,17 +131,30 @@ tasks.register("copyScreenshotsToReports") {
             val possiblePaths = listOf(
                 "$homeDir/Library/Android/sdk/platform-tools/adb",
                 "$homeDir/Android/Sdk/platform-tools/adb",
-                System.getenv("ANDROID_HOME")?.let { "$it/platform-tools/adb" }
+                System.getenv("ANDROID_HOME")?.let { "$it/platform-tools/adb" },
+                System.getenv("ANDROID_SDK_ROOT")?.let { "$it/platform-tools/adb" }
             )
-            possiblePaths.firstOrNull { File(it).exists() } ?: "adb"
+            possiblePaths.firstOrNull { path -> path != null && File(path).exists() }
         }
         
-        val adb = if (adbPath.endsWith("adb")) {
-            // Si ya es solo "adb", asumir que está en PATH
-            "adb"
-        } else {
+        val adb = if (adbPath != null && File(adbPath).exists()) {
             adbPath
+        } else {
+            // Último recurso: intentar "adb" si está en PATH
+            try {
+                val testProcess = ProcessBuilder("adb", "version").start()
+                testProcess.waitFor()
+                if (testProcess.exitValue() == 0) {
+                    "adb"
+                } else {
+                    throw RuntimeException("ADB no encontrado. Por favor instala Android SDK o agrega adb al PATH")
+                }
+            } catch (e: Exception) {
+                throw RuntimeException("ADB no encontrado. Buscado en: ${System.getProperty("user.home")}/Library/Android/sdk/platform-tools/adb. Por favor verifica que Android SDK está instalado.", e)
+            }
         }
+        
+        println("   📍 Ruta ADB: $adb")
         
         // Verificar que hay un dispositivo conectado
         val devicesProcess = ProcessBuilder(adb, "devices")
@@ -155,7 +173,7 @@ tasks.register("copyScreenshotsToReports") {
         }
         
         // Crear el directorio de screenshots siempre, incluso si no hay dispositivo
-        val reportsDir = File("${project.buildDir}/reports/androidTests/connected")
+        val reportsDir = File(layout.buildDirectory.get().asFile, "reports/androidTests/connected")
         reportsDir.mkdirs()
         
         // Buscar el directorio de debug o usar el primero disponible
@@ -211,6 +229,25 @@ tasks.register("copyScreenshotsToReports") {
             if (exitCode == 0) {
                 copied = true
                 println("✅ Copia desde almacenamiento externo exitosa")
+                
+                // Mover archivos desde el subdirectorio si es necesario
+                val screenshotsSubDir = File(screenshotsDir, "screenshots")
+                if (screenshotsSubDir.exists() && screenshotsSubDir.isDirectory) {
+                    println("📁 Moviendo archivos desde subdirectorio...")
+                    screenshotsSubDir.listFiles()?.forEach { file ->
+                        if (file.isFile && file.name.endsWith(".png", ignoreCase = true)) {
+                            val destFile = File(screenshotsDir, file.name)
+                            if (!destFile.exists()) {
+                                file.renameTo(destFile)
+                                println("   ✓ Movido: ${file.name}")
+                            } else {
+                                file.delete()
+                            }
+                        }
+                    }
+                    // Eliminar el subdirectorio vacío
+                    screenshotsSubDir.delete()
+                }
             } else {
                 println("⚠️  Error al copiar desde almacenamiento externo (código: $exitCode)")
             }
@@ -264,6 +301,8 @@ tasks.register("copyScreenshotsToReports") {
                     if (pullInternalExitCode == 0) {
                         copied = true
                         println("✅ Copia desde almacenamiento interno exitosa")
+                    } else {
+                        println("⚠️  Error al copiar desde almacenamiento interno (código: $pullInternalExitCode)")
                     }
                     
                     // Limpiar archivos temporales
@@ -278,20 +317,62 @@ tasks.register("copyScreenshotsToReports") {
             }
         }
         
-        // Verificar qué archivos se copiaron
-        val screenshotFiles = screenshotsDir.listFiles { file -> 
-            file.isFile && file.name.endsWith(".png", ignoreCase = true)
-        } ?: emptyArray()
+        // Verificar qué archivos se copiaron (buscar recursivamente por si están en subdirectorio)
+        val screenshotFiles = mutableListOf<File>()
+        
+        // Buscar en el directorio principal
+        screenshotsDir.listFiles()?.forEach { file ->
+            if (file.isFile && file.name.endsWith(".png", ignoreCase = true)) {
+                screenshotFiles.add(file)
+            } else if (file.isDirectory && file.name == "screenshots") {
+                // Si hay un subdirectorio screenshots, mover los archivos de ahí
+                file.listFiles()?.forEach { subFile ->
+                    if (subFile.isFile && subFile.name.endsWith(".png", ignoreCase = true)) {
+                        val destFile = File(screenshotsDir, subFile.name)
+                        if (!destFile.exists()) {
+                            subFile.renameTo(destFile)
+                        }
+                        screenshotFiles.add(destFile)
+                    }
+                }
+            }
+        }
         
         if (screenshotFiles.isNotEmpty()) {
             println("✅ ${screenshotFiles.size} screenshots copiadas exitosamente")
             screenshotFiles.forEach { file ->
                 println("   - ${file.name} (${file.length()} bytes)")
             }
+            println("📂 Ubicación: ${screenshotsDir.absolutePath}")
+            copied = true // Marcar como exitoso para evitar warnings
         } else {
             println("⚠️  No se encontraron screenshots para copiar")
             println("   Revisa los logs del test para ver dónde se guardaron las screenshots")
             println("   Busca mensajes que contengan 'ScreenshotTestRule' en los logs")
+            println("   El directorio está en: ${screenshotsDir.absolutePath}")
+            
+            // Intentar verificar en el dispositivo qué screenshots existen solo si hay dispositivo conectado
+            if (devicesOutput.contains("device")) {
+                println("\n🔍 Verificando screenshots en el dispositivo...")
+                try {
+                    val checkExternal = ProcessBuilder(adb, "shell", "ls", "-la", "/sdcard/Pictures/screenshots/")
+                        .redirectErrorStream(true)
+                        .start()
+                    val externalOutput = checkExternal.inputStream.bufferedReader().readText()
+                    checkExternal.waitFor()
+                    
+                    if (externalOutput.isNotEmpty() && !externalOutput.contains("No such file")) {
+                        println("   📸 Screenshots encontradas en /sdcard/Pictures/screenshots/:")
+                        externalOutput.lines().filter { it.contains(".png") }.forEach { line ->
+                            println("      $line")
+                        }
+                    } else {
+                        println("   ❌ No hay screenshots en almacenamiento externo")
+                    }
+                } catch (e: Exception) {
+                    println("   ⚠️  Error al verificar: ${e.message}")
+                }
+            }
         }
     }
 }
@@ -299,27 +380,30 @@ tasks.register("copyScreenshotsToReports") {
 // Hacer que copyScreenshotsToReports se ejecute después de connectedAndroidTest
 // Usamos afterEvaluate para que el task esté disponible cuando se configure
 afterEvaluate {
+    println("🔧 Configurando copyScreenshotsToReports para ejecutarse después de los tests...")
+    
     // Configurar para todos los tasks de tests conectados
     tasks.matching { task ->
         task.name.startsWith("connected") && task.name.contains("AndroidTest")
     }.configureEach {
         finalizedBy("copyScreenshotsToReports")
+        println("   ✅ Configurado: ${name} -> copyScreenshotsToReports")
     }
     
-    // También configurar específicamente los tasks principales
-    try {
-        tasks.named("connectedAndroidTest") {
-            finalizedBy("copyScreenshotsToReports")
-        }
-    } catch (e: Exception) {
-        // El task puede no existir, eso está bien
+    // También configurar específicamente los tasks principales con try-catch más explícito
+    val mainTestTask = tasks.findByName("connectedAndroidTest")
+    if (mainTestTask != null) {
+        mainTestTask.finalizedBy("copyScreenshotsToReports")
+        println("   ✅ Configurado: connectedAndroidTest -> copyScreenshotsToReports")
+    } else {
+        println("   ⚠️  connectedAndroidTest no encontrado")
     }
     
-    try {
-        tasks.named("connectedDebugAndroidTest") {
-            finalizedBy("copyScreenshotsToReports")
-        }
-    } catch (e: Exception) {
-        // El task puede no existir, eso está bien
+    val debugTestTask = tasks.findByName("connectedDebugAndroidTest")
+    if (debugTestTask != null) {
+        debugTestTask.finalizedBy("copyScreenshotsToReports")
+        println("   ✅ Configurado: connectedDebugAndroidTest -> copyScreenshotsToReports")
+    } else {
+        println("   ⚠️  connectedDebugAndroidTest no encontrado")
     }
 }
