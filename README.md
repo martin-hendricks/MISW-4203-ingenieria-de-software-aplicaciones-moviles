@@ -334,6 +334,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Los reportes HTML se generan en:
 ```
 app/build/reports/androidTests/connected/index.html
+
+o
+
+app/build/reports/androidTests/connected/debug/index.html
+
 ```
 
 ---
