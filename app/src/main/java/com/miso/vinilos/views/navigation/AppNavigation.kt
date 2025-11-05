@@ -14,8 +14,10 @@ import androidx.navigation.NavType
 import com.miso.vinilos.views.components.BottomNavigationBar
 import com.miso.vinilos.views.screens.AlbumListScreen
 import com.miso.vinilos.views.screens.AlbumDetailScreen
+import com.miso.vinilos.views.screens.ArtistListScreen
 import com.miso.vinilos.views.screens.ProfileScreen
 import com.miso.vinilos.viewmodels.AlbumViewModel
+import com.miso.vinilos.viewmodels.MusicianViewModel
 import com.miso.vinilos.viewmodels.ProfileViewModel
 
 /**
@@ -76,7 +78,14 @@ fun AppNavigation(
 
             // Pantalla de Artistas
             composable(NavigationRoutes.Artists.route) {
-                // TODO: Implementar pantalla de artistas
+                val musicianViewModel: MusicianViewModel = viewModel()
+                ArtistListScreen(
+                    musicianViewModel = musicianViewModel,
+                    onArtistClick = { musician ->
+                        // TODO: Navegar a pantalla de detalle del artista cuando esté implementada
+                        // navController.navigate(NavigationRoutes.ArtistDetail.createRoute(musician.id))
+                    }
+                )
             }
             
             // Pantalla de Coleccionistas
