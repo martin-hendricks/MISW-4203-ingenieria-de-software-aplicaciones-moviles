@@ -28,7 +28,7 @@ data class Musician(
     val albums: List<Album>? = null,
     
     @SerializedName("performerPrizes")
-    val performerPrizes: List<Any>? = null
+    val performerPrizes: List<PerformerPrize>? = null
 ) {
     /**
      * Retorna la cantidad de álbumes del músico

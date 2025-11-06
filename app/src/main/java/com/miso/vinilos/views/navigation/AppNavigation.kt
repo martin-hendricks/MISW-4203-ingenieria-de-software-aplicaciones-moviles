@@ -15,6 +15,7 @@ import com.miso.vinilos.views.components.BottomNavigationBar
 import com.miso.vinilos.views.screens.AlbumListScreen
 import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.screens.ArtistListScreen
+import com.miso.vinilos.views.screens.ArtistDetailScreen
 import com.miso.vinilos.views.screens.ProfileScreen
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.viewmodels.MusicianViewModel
@@ -82,9 +83,24 @@ fun AppNavigation(
                 ArtistListScreen(
                     musicianViewModel = musicianViewModel,
                     onArtistClick = { musician ->
-                        // TODO: Navegar a pantalla de detalle del artista cuando esté implementada
-                        // navController.navigate(NavigationRoutes.ArtistDetail.createRoute(musician.id))
+                        navController.navigate(NavigationRoutes.ArtistDetail.createRoute(musician.id))
                     }
+                )
+            }
+            
+            // Pantalla de Detalle de Artista
+            composable(
+                route = NavigationRoutes.ArtistDetail.route,
+                arguments = listOf(
+                    navArgument("musicianId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val musicianId = backStackEntry.arguments?.getInt("musicianId") ?: 0
+                val musicianViewModel: MusicianViewModel = viewModel()
+                ArtistDetailScreen(
+                    musicianId = musicianId,
+                    musicianViewModel = musicianViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
             
