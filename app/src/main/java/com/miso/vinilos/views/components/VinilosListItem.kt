@@ -42,7 +42,8 @@ fun VinilosListItem(
     topLabel: String,
     bottomLabel: String,
     isImageCircular: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    placeholderInitials: String? = null
 ) {
     // Normalizar y validar la URL de la imagen
     val normalizedUrl = remember(imageUrl) {
@@ -101,7 +102,8 @@ fun VinilosListItem(
                             // Imagen de error si falla la carga
                             ImagePlaceholder(
                                 modifier = Modifier.size(64.dp),
-                                isCircular = isImageCircular
+                                isCircular = isImageCircular,
+                                initials = placeholderInitials
                             )
                         }
                     )
@@ -109,7 +111,8 @@ fun VinilosListItem(
                     // Mostrar placeholder si la URL no es válida
                     ImagePlaceholder(
                         modifier = Modifier.size(64.dp),
-                        isCircular = isImageCircular
+                        isCircular = isImageCircular,
+                        initials = placeholderInitials
                     )
                 }
 
@@ -125,11 +128,13 @@ fun VinilosListItem(
 
 /**
  * Placeholder para cuando no hay imagen o falla la carga
+ * Muestra iniciales si se proporcionan, sino muestra un ícono
  */
 @Composable
-private fun ImagePlaceholder(
+fun ImagePlaceholder(
     modifier: Modifier = Modifier,
-    isCircular: Boolean = false
+    isCircular: Boolean = false,
+    initials: String? = null
 ) {
     Box(
         modifier = modifier
@@ -137,11 +142,22 @@ private fun ImagePlaceholder(
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.BrokenImage,
-            contentDescription = "Imagen no disponible",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier.size(32.dp)
-        )
+        if (initials != null && initials.isNotBlank()) {
+            // Mostrar iniciales si están disponibles
+            Text(
+                text = initials.uppercase().take(2),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            )
+        } else {
+            // Mostrar ícono si no hay iniciales
+            Icon(
+                imageVector = Icons.Default.BrokenImage,
+                contentDescription = "Imagen no disponible",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.size(32.dp)
+            )
+        }
     }
 }
