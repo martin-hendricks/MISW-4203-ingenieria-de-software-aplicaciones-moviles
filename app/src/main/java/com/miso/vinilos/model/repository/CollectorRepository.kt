@@ -1,5 +1,6 @@
 package com.miso.vinilos.model.repository
 
+import android.util.Log
 import com.miso.vinilos.model.data.Collector
 import com.miso.vinilos.model.data.CollectorCreateDTO
 import com.miso.vinilos.model.network.CollectorApiService
@@ -48,12 +49,22 @@ class CollectorRepository(
     suspend fun getCollector(id: Int): Result<Collector> {
         return try {
             val response = apiService.getCollector(id)
+            Log.d("CollectorRepository", "getCollector($id): Response code=${response.code()}, isSuccessful=${response.isSuccessful()}")
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                val collector = response.body()!!
+                Log.d("CollectorRepository", "getCollector($id): Collector parseado exitosamente - id=${collector.id}, name=${collector.name}")
+                Log.d("CollectorRepository", "getCollector($id): collectorAlbums: ${collector.collectorAlbums?.size ?: 0} álbumes")
+                Log.d("CollectorRepository", "getCollector($id): favoritePerformers: ${collector.favoritePerformers?.size ?: 0} performers")
+                collector.collectorAlbums?.forEachIndexed { idx, ca ->
+                    Log.d("CollectorRepository", "collectorAlbum[$idx]: id=${ca.id}, albumId=${ca.albumId}, album=${ca.album}, album?.id=${ca.album?.id}, price=${ca.price}, status=${ca.status}")
+                }
+                Result.success(collector)
             } else {
+                Log.e("CollectorRepository", "getCollector($id): Error - code=${response.code()}, message=${response.message()}, body=${response.errorBody()?.string()}")
                 Result.failure(Exception("Coleccionista no encontrado"))
             }
         } catch (e: Exception) {
+            Log.e("CollectorRepository", "getCollector($id): Excepción", e)
             Result.failure(e)
         }
     }
