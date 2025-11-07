@@ -251,4 +251,209 @@ object TestDataFactory {
             performers = listOf(createTestPerformer(1, "The Beatles"))
         )
     }
+    
+    /**
+     * Crea un músico de prueba
+     */
+    fun createTestMusician(
+        id: Int = 1,
+        name: String = "John Lennon",
+        image: String = "https://example.com/john-lennon.jpg",
+        description: String = "Músico y compositor británico",
+        birthDate: java.util.Calendar = java.util.Calendar.getInstance().apply {
+            set(1940, java.util.Calendar.OCTOBER, 9)
+        },
+        albums: List<Album>? = null,
+        performerPrizes: List<com.miso.vinilos.model.data.PerformerPrize>? = null
+    ): com.miso.vinilos.model.data.Musician {
+        return com.miso.vinilos.model.data.Musician(
+            id = id,
+            name = name,
+            image = image,
+            description = description,
+            birthDate = birthDate.time,
+            albums = albums,
+            performerPrizes = performerPrizes
+        )
+    }
+    
+    /**
+     * Crea una lista de músicos de prueba
+     */
+    fun createTestMusicians(): List<com.miso.vinilos.model.data.Musician> {
+        val calendar1 = java.util.Calendar.getInstance().apply {
+            set(1940, java.util.Calendar.OCTOBER, 9)
+        }
+        val calendar2 = java.util.Calendar.getInstance().apply {
+            set(1942, java.util.Calendar.JUNE, 18)
+        }
+        val calendar3 = java.util.Calendar.getInstance().apply {
+            set(1943, java.util.Calendar.JANUARY, 9)
+        }
+        
+        return listOf(
+            createTestMusician(
+                id = 1,
+                name = "John Lennon",
+                image = "https://example.com/john-lennon.jpg",
+                description = "Músico y compositor británico, miembro de The Beatles",
+                birthDate = calendar1,
+                albums = listOf(createTestAlbum(1, "Abbey Road"))
+            ),
+            createTestMusician(
+                id = 2,
+                name = "Paul McCartney",
+                image = "https://example.com/paul-mccartney.jpg",
+                description = "Músico y compositor británico, miembro de The Beatles",
+                birthDate = calendar2,
+                albums = listOf(createTestAlbum(1, "Abbey Road"))
+            ),
+            createTestMusician(
+                id = 3,
+                name = "David Gilmour",
+                image = "https://example.com/david-gilmour.jpg",
+                description = "Guitarrista y vocalista de Pink Floyd",
+                birthDate = calendar3,
+                albums = listOf(createTestAlbum(2, "The Dark Side of the Moon"))
+            )
+        )
+    }
+    
+    /**
+     * Crea un músico completo con todos los detalles para pruebas de detalle
+     */
+    fun createTestMusicianWithFullDetails(
+        id: Int = 1,
+        name: String = "John Lennon",
+        image: String = "https://example.com/john-lennon.jpg",
+        description: String = "Músico y compositor británico, miembro de The Beatles"
+    ): com.miso.vinilos.model.data.Musician {
+        val calendar = java.util.Calendar.getInstance().apply {
+            set(1940, java.util.Calendar.OCTOBER, 9)
+        }
+        
+        val prize = com.miso.vinilos.model.data.Prize(
+            id = 1,
+            name = "Grammy Award",
+            description = "Premio Grammy",
+            organization = "Recording Academy"
+        )
+        
+        val performerPrize = com.miso.vinilos.model.data.PerformerPrize(
+            id = 1,
+            premiationDate = "1970-01-01",
+            prize = prize,
+            prizeId = 1
+        )
+        
+        return com.miso.vinilos.model.data.Musician(
+            id = id,
+            name = name,
+            image = image,
+            description = description,
+            birthDate = calendar.time,
+            albums = listOf(
+                createTestAlbum(1, "Abbey Road"),
+                createTestAlbum(4, "Sgt. Pepper's Lonely Hearts Club Band")
+            ),
+            performerPrizes = listOf(performerPrize)
+        )
+    }
+    
+    /**
+     * Crea un coleccionista de prueba
+     */
+    fun createTestCollector(
+        id: Int = 1,
+        name: String = "Juan Pérez",
+        telephone: String = "+57 300 123 4567",
+        email: String = "juan.perez@example.com",
+        image: String? = "https://example.com/juan-perez.jpg",
+        comments: List<Any>? = null,
+        favoritePerformers: List<Performer>? = null,
+        collectorAlbums: List<com.miso.vinilos.model.data.CollectorAlbum>? = null
+    ): com.miso.vinilos.model.data.Collector {
+        return com.miso.vinilos.model.data.Collector(
+            id = id,
+            name = name,
+            telephone = telephone,
+            email = email,
+            image = image,
+            comments = comments,
+            favoritePerformers = favoritePerformers,
+            collectorAlbums = collectorAlbums
+        )
+    }
+    
+    /**
+     * Crea una lista de coleccionistas de prueba
+     */
+    fun createTestCollectors(): List<com.miso.vinilos.model.data.Collector> {
+        return listOf(
+            createTestCollector(
+                id = 1,
+                name = "Juan Pérez",
+                telephone = "+57 300 123 4567",
+                email = "juan.perez@example.com",
+                image = "https://example.com/juan-perez.jpg",
+                favoritePerformers = listOf(createTestPerformer(1, "The Beatles"))
+            ),
+            createTestCollector(
+                id = 2,
+                name = "María García",
+                telephone = "+57 310 987 6543",
+                email = "maria.garcia@example.com",
+                image = "https://example.com/maria-garcia.jpg",
+                favoritePerformers = listOf(createTestPerformer(2, "Pink Floyd"))
+            ),
+            createTestCollector(
+                id = 3,
+                name = "Carlos Rodríguez",
+                telephone = "+57 320 555 1234",
+                email = "carlos.rodriguez@example.com",
+                image = "https://example.com/carlos-rodriguez.jpg",
+                favoritePerformers = listOf(createTestPerformer(3, "Led Zeppelin"))
+            )
+        )
+    }
+    
+    /**
+     * Crea un coleccionista completo con todos los detalles para pruebas de detalle
+     */
+    fun createTestCollectorWithFullDetails(
+        id: Int = 1,
+        name: String = "Juan Pérez",
+        telephone: String = "+57 300 123 4567",
+        email: String = "juan.perez@example.com"
+    ): com.miso.vinilos.model.data.Collector {
+        val collectorAlbum1 = com.miso.vinilos.model.data.CollectorAlbum(
+            id = 1,
+            price = 50000,
+            status = "ACTIVE",
+            album = null,
+            albumId = 1
+        )
+        
+        val collectorAlbum2 = com.miso.vinilos.model.data.CollectorAlbum(
+            id = 2,
+            price = 60000,
+            status = "ACTIVE",
+            album = null,
+            albumId = 2
+        )
+        
+        return com.miso.vinilos.model.data.Collector(
+            id = id,
+            name = name,
+            telephone = telephone,
+            email = email,
+            image = "https://example.com/juan-perez.jpg",
+            comments = null,
+            favoritePerformers = listOf(
+                createTestPerformer(1, "The Beatles"),
+                createTestPerformer(2, "Pink Floyd")
+            ),
+            collectorAlbums = listOf(collectorAlbum1, collectorAlbum2)
+        )
+    }
 }

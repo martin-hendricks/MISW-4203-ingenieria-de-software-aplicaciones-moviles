@@ -2,6 +2,8 @@ package com.miso.vinilos.config
 
 import com.google.gson.GsonBuilder
 import com.miso.vinilos.model.network.AlbumApiService
+import com.miso.vinilos.model.network.MusicianApiService
+import com.miso.vinilos.model.network.CollectorApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -56,5 +58,27 @@ object TestRetrofitClient {
     fun createTestApiService(baseUrl: String): AlbumApiService {
         val retrofit = createTestClient(baseUrl)
         return retrofit.create(AlbumApiService::class.java)
+    }
+    
+    /**
+     * Crea un servicio API de músicos para pruebas
+     * 
+     * @param baseUrl URL base del servidor mock
+     * @return Instancia de MusicianApiService configurada para pruebas
+     */
+    fun createTestMusicianApiService(baseUrl: String): MusicianApiService {
+        val retrofit = createTestClient(baseUrl)
+        return retrofit.create(MusicianApiService::class.java)
+    }
+    
+    /**
+     * Crea un servicio API de coleccionistas para pruebas
+     * 
+     * @param baseUrl URL base del servidor mock
+     * @return Instancia de CollectorApiService configurada para pruebas
+     */
+    fun createTestCollectorApiService(baseUrl: String): CollectorApiService {
+        val retrofit = createTestClient(baseUrl)
+        return retrofit.create(CollectorApiService::class.java)
     }
 }

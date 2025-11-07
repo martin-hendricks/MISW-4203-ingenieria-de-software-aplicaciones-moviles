@@ -29,12 +29,16 @@ import com.miso.vinilos.viewmodels.ProfileViewModel
  *
  * @param navController Controlador de navegación
  * @param albumViewModel ViewModel de álbumes (opcional, para testing)
+ * @param musicianViewModel ViewModel de músicos (opcional, para testing)
+ * @param collectorViewModel ViewModel de coleccionistas (opcional, para testing)
  * @param profileViewModel ViewModel de perfil (opcional, para testing)
  */
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     albumViewModel: AlbumViewModel? = null,
+    musicianViewModel: MusicianViewModel? = null,
+    collectorViewModel: CollectorViewModel? = null,
     profileViewModel: ProfileViewModel? = null
 ) {
     // ViewModels compartidos entre pantallas
@@ -82,9 +86,9 @@ fun AppNavigation(
 
             // Pantalla de Artistas
             composable(NavigationRoutes.Artists.route) {
-                val musicianViewModel: MusicianViewModel = viewModel()
+                val sharedMusicianViewModel = musicianViewModel ?: viewModel()
                 ArtistListScreen(
-                    musicianViewModel = musicianViewModel,
+                    musicianViewModel = sharedMusicianViewModel,
                     profileViewModel = sharedProfileViewModel,
                     onArtistClick = { musician ->
                         navController.navigate(NavigationRoutes.ArtistDetail.createRoute(musician.id))
@@ -100,19 +104,19 @@ fun AppNavigation(
                 )
             ) { backStackEntry ->
                 val musicianId = backStackEntry.arguments?.getInt("musicianId") ?: 0
-                val musicianViewModel: MusicianViewModel = viewModel()
+                val sharedMusicianViewModel = musicianViewModel ?: viewModel()
                 ArtistDetailScreen(
                     musicianId = musicianId,
-                    musicianViewModel = musicianViewModel,
+                    musicianViewModel = sharedMusicianViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
             
             // Pantalla de Coleccionistas
             composable(NavigationRoutes.Collectors.route) {
-                val collectorViewModel: CollectorViewModel = viewModel()
+                val sharedCollectorViewModel = collectorViewModel ?: viewModel()
                 CollectorListScreen(
-                    collectorViewModel = collectorViewModel,
+                    collectorViewModel = sharedCollectorViewModel,
                     profileViewModel = sharedProfileViewModel,
                     onCollectorClick = { collector ->
                         navController.navigate(NavigationRoutes.CollectorDetail.createRoute(collector.id))
@@ -128,10 +132,10 @@ fun AppNavigation(
                 )
             ) { backStackEntry ->
                 val collectorId = backStackEntry.arguments?.getInt("collectorId") ?: 0
-                val collectorViewModel: CollectorViewModel = viewModel()
+                val sharedCollectorViewModel = collectorViewModel ?: viewModel()
                 CollectorDetailScreen(
                     collectorId = collectorId,
-                    collectorViewModel = collectorViewModel,
+                    collectorViewModel = sharedCollectorViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
