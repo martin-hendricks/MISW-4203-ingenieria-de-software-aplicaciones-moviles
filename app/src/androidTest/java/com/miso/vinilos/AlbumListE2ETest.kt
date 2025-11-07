@@ -10,6 +10,7 @@ import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
 import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
@@ -45,6 +46,11 @@ class AlbumListE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
 
     /**
      * Helper function to create a test ViewModel with MockWebServer
@@ -82,11 +88,17 @@ class AlbumListE2ETest {
         // Assert
         composeTestRule.waitForIdle()
         
+        // Capturar screenshot del estado inicial después de cargar
+        screenshotTestRule.takeScreenshot("01-lista-cargada")
+        
         // Verificar que el título está visible
         CustomMatchers.verifyAlbumsTitleIsVisible(composeTestRule)
         
         // Verificar que los álbumes están visibles
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
+        
+        // Capturar screenshot después de verificar los álbumes
+        screenshotTestRule.takeScreenshot("02-albumes-verificados")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "The Dark Side of the Moon")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Led Zeppelin IV")
         
@@ -126,6 +138,9 @@ class AlbumListE2ETest {
         // Assert - Verificar que el estado de carga es visible inicialmente
         CustomMatchers.verifyLoadingTextIsVisible(composeTestRule)
         CustomMatchers.verifyCircularProgressIndicatorIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de carga
+        screenshotTestRule.takeScreenshot("estado-carga")
     }
 
     /**
@@ -159,6 +174,9 @@ class AlbumListE2ETest {
         
         // Verificar que el botón de reintento está visible
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error
+        screenshotTestRule.takeScreenshot("estado-error")
         
         // Verificar que el estado de carga ya no está visible
         CustomMatchers.verifyLoadingTextIsNotVisible(composeTestRule)
@@ -195,6 +213,9 @@ class AlbumListE2ETest {
         composeTestRule.waitForIdle()
         CustomMatchers.verifyErrorMessageIsVisible(composeTestRule)
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error inicial
+        screenshotTestRule.takeScreenshot("01-estado-error")
 
         // Act - Hacer clic en reintentar
         composeTestRule.onNodeWithText("Reintentar").performClick()
@@ -203,6 +224,9 @@ class AlbumListE2ETest {
         composeTestRule.waitForIdle()
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "The Dark Side of the Moon")
+        
+        // Capturar screenshot después del reintento exitoso
+        screenshotTestRule.takeScreenshot("02-después-reintento")
     }
 
     /**
@@ -237,6 +261,9 @@ class AlbumListE2ETest {
         // Verificar que no hay álbumes visibles
         CustomMatchers.verifyEmptyList(composeTestRule)
         
+        // Capturar screenshot de lista vacía
+        screenshotTestRule.takeScreenshot("lista-vacía")
+        
         // Verificar que la navegación está presente
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
     }
@@ -268,6 +295,9 @@ class AlbumListE2ETest {
         // Assert
         composeTestRule.waitForIdle()
         
+        // Capturar screenshot inicial de la lista
+        screenshotTestRule.takeScreenshot("01-lista-cargada")
+        
         // Verificar elementos específicos del primer álbum
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyPerformerIsVisible(composeTestRule, "The Beatles")
@@ -279,6 +309,9 @@ class AlbumListE2ETest {
         // Verificar que las imágenes están presentes (implícito al verificar los álbumes)
         CustomMatchers.verifyAlbumImageIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyAlbumImageIsVisible(composeTestRule, "The Dark Side of the Moon")
+        
+        // Capturar screenshot con todos los elementos verificados
+        screenshotTestRule.takeScreenshot("02-elementos-verificados")
     }
 
     /**
@@ -313,6 +346,9 @@ class AlbumListE2ETest {
         CustomMatchers.verifyAlbumsTitleIsVisible(composeTestRule)
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
+        
+        // Capturar screenshot del rol coleccionista
+        screenshotTestRule.takeScreenshot("rol-coleccionista")
     }
 
     /**
@@ -347,6 +383,9 @@ class AlbumListE2ETest {
         CustomMatchers.verifyAlbumsTitleIsVisible(composeTestRule)
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "The Dark Side of the Moon")
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
+        
+        // Capturar screenshot del rol visitante
+        screenshotTestRule.takeScreenshot("rol-visitante")
     }
 
     /**
@@ -385,6 +424,9 @@ class AlbumListE2ETest {
         composeTestRule.onNodeWithText("Artistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Coleccionistas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Perfil").assertIsDisplayed()
+        
+        // Capturar screenshot de la barra de navegación
+        screenshotTestRule.takeScreenshot("barra-navegacion")
     }
 
     /**
@@ -418,12 +460,21 @@ class AlbumListE2ETest {
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "The Dark Side of the Moon")
         
+        // Capturar screenshot antes del scroll
+        screenshotTestRule.takeScreenshot("01-antes-scroll")
+        
         // Realizar scroll hacia abajo
         composeTestRule.onNodeWithText("Abbey Road").performScrollTo()
+        
+        // Capturar screenshot después del scroll
+        screenshotTestRule.takeScreenshot("02-durante-scroll")
         
         // Verificar que los álbumes posteriores están visibles después del scroll
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Sgt. Pepper's Lonely Hearts Club Band")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Wish You Were Here")
+        
+        // Capturar screenshot final con álbumes posteriores visibles
+        screenshotTestRule.takeScreenshot("03-después-scroll")
     }
 
     /**
@@ -458,6 +509,9 @@ class AlbumListE2ETest {
         
         // Verificar que se muestra "Artista desconocido"
         CustomMatchers.verifyUnknownArtistIsVisible(composeTestRule)
+        
+        // Capturar screenshot con artista desconocido
+        screenshotTestRule.takeScreenshot("artista-desconocido")
     }
 
     /**
@@ -497,5 +551,8 @@ class AlbumListE2ETest {
         // Verificar que al menos uno de los performers está visible
         // Nota: En la UI real, los performers se muestran separados por comas en una sola línea
         CustomMatchers.verifyPerformerIsVisible(composeTestRule, "The Beatles")
+        
+        // Capturar screenshot con múltiples performers
+        screenshotTestRule.takeScreenshot("múltiples-performers")
     }
 }
