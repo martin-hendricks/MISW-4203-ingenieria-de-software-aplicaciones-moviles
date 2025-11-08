@@ -16,9 +16,11 @@ import com.miso.vinilos.views.screens.AlbumListScreen
 import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.screens.ArtistListScreen
 import com.miso.vinilos.views.screens.ArtistDetailScreen
+import com.miso.vinilos.views.screens.CollectorListScreen
 import com.miso.vinilos.views.screens.ProfileScreen
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.viewmodels.MusicianViewModel
+import com.miso.vinilos.viewmodels.CollectorViewModel
 import com.miso.vinilos.viewmodels.ProfileViewModel
 
 /**
@@ -106,7 +108,14 @@ fun AppNavigation(
             
             // Pantalla de Coleccionistas
             composable(NavigationRoutes.Collectors.route) {
-                // TODO: Implementar pantalla de coleccionistas
+                val collectorViewModel: CollectorViewModel = viewModel()
+                CollectorListScreen(
+                    collectorViewModel = collectorViewModel,
+                    onCollectorClick = { collector ->
+                        // TODO: Implementar navegación al detalle del coleccionista cuando se necesite
+                        // navController.navigate(NavigationRoutes.CollectorDetail.createRoute(collector.id))
+                    }
+                )
             }
             
             // Pantalla de Perfil
