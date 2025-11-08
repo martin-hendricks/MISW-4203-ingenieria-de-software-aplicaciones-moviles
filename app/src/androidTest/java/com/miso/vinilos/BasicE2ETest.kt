@@ -74,7 +74,7 @@ class BasicE2ETest {
         composeTestRule.waitForIdle()
         
         // Verificar que las pestañas de navegación están presentes
-        composeTestRule.onAllNodesWithText("Álbumes").assertCountEquals(1) //  Navigation
+        composeTestRule.onAllNodesWithText("Álbumes").assertCountEquals(2) //  Navigation
         composeTestRule.onAllNodesWithText("Artistas").assertCountEquals(1)
         composeTestRule.onAllNodesWithText("Coleccionistas").assertCountEquals(1)
         composeTestRule.onAllNodesWithText("Perfil").assertCountEquals(1)

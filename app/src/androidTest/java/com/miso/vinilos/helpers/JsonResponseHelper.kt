@@ -3,6 +3,8 @@ package com.miso.vinilos.helpers
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.miso.vinilos.model.data.Album
+import com.miso.vinilos.model.data.Musician
+import com.miso.vinilos.model.data.Collector
 import okhttp3.mockwebserver.MockResponse
 import java.util.*
 
@@ -141,5 +143,71 @@ object JsonResponseHelper {
             .setResponseCode(200)
             .setHeader("Content-Type", "application/json")
             .setBody(partialJson)
+    }
+    
+    /**
+     * Crea una respuesta exitosa con una lista de músicos
+     */
+    fun createMusiciansSuccessResponse(musicians: List<Musician>): MockResponse {
+        val json = gson.toJson(musicians)
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta exitosa con un solo músico
+     */
+    fun createMusicianSuccessResponse(musician: Musician): MockResponse {
+        val json = gson.toJson(musician)
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta de lista vacía de músicos
+     */
+    fun createEmptyMusiciansResponse(): MockResponse {
+        val json = gson.toJson(emptyList<Musician>())
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta exitosa con una lista de coleccionistas
+     */
+    fun createCollectorsSuccessResponse(collectors: List<Collector>): MockResponse {
+        val json = gson.toJson(collectors)
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta exitosa con un solo coleccionista
+     */
+    fun createCollectorSuccessResponse(collector: Collector): MockResponse {
+        val json = gson.toJson(collector)
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta de lista vacía de coleccionistas
+     */
+    fun createEmptyCollectorsResponse(): MockResponse {
+        val json = gson.toJson(emptyList<Collector>())
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
     }
 }
