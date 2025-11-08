@@ -10,6 +10,7 @@ import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
 import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
@@ -41,6 +42,11 @@ class CollectorListE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
 
     /**
      * Helper function to create a test ViewModel with MockWebServer
@@ -95,6 +101,10 @@ class CollectorListE2ETest {
         // Assert
         // Verificar que el título está visible (buscar el del header, no el tab)
         composeTestRule.waitForIdle()
+        
+        // Capturar screenshot del estado inicial después de cargar
+        screenshotTestRule.takeScreenshot("01-lista-cargada")
+        
         val titleNodes = composeTestRule.onAllNodesWithText("Coleccionistas")
         if (titleNodes.fetchSemanticsNodes().size > 1) {
             titleNodes[1].assertIsDisplayed()
@@ -106,6 +116,9 @@ class CollectorListE2ETest {
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Juan Pérez")
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "María García")
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Carlos Rodríguez")
+        
+        // Capturar screenshot después de verificar los coleccionistas
+        screenshotTestRule.takeScreenshot("02-coleccionistas-verificados")
         
         // Verificar que la navegación inferior está presente
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
@@ -143,6 +156,9 @@ class CollectorListE2ETest {
         // Nota: No verificamos el CircularProgressIndicator directamente porque no tiene contentDescription
         // En su lugar, verificamos el texto de carga que está visible junto con el indicador
         CustomMatchers.verifyCollectorsLoadingTextIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de carga
+        screenshotTestRule.takeScreenshot("estado-carga")
     }
 
     /**
@@ -179,6 +195,9 @@ class CollectorListE2ETest {
         
         // Verificar que el botón de reintento está visible
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error
+        screenshotTestRule.takeScreenshot("estado-error")
         
         // Verificar que el estado de carga ya no está visible
         CustomMatchers.verifyCollectorsLoadingTextIsNotVisible(composeTestRule)
@@ -219,6 +238,9 @@ class CollectorListE2ETest {
         // Assert - Verificar estado de error inicial
         CustomMatchers.verifyCollectorsErrorMessageIsVisible(composeTestRule)
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error inicial
+        screenshotTestRule.takeScreenshot("01-estado-error")
 
         // Act - Hacer clic en reintentar
         composeTestRule.onNodeWithText("Reintentar").performClick()
@@ -227,6 +249,9 @@ class CollectorListE2ETest {
         composeTestRule.waitForIdle()
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Juan Pérez")
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "María García")
+        
+        // Capturar screenshot después del reintento exitoso
+        screenshotTestRule.takeScreenshot("02-después-reintento")
     }
 
     /**
@@ -276,6 +301,9 @@ class CollectorListE2ETest {
         composeTestRule.onNodeWithText("Juan Pérez")
             .assertDoesNotExist()
         
+        // Capturar screenshot de lista vacía
+        screenshotTestRule.takeScreenshot("lista-vacía")
+        
         // Verificar que la navegación está presente
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
     }
@@ -310,11 +338,19 @@ class CollectorListE2ETest {
         composeTestRule.waitForIdle()
 
         // Assert
+        composeTestRule.waitForIdle()
+        
+        // Capturar screenshot inicial de la lista
+        screenshotTestRule.takeScreenshot("01-lista-cargada")
+        
         // Verificar elementos específicos del primer coleccionista
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Juan Pérez")
         
         // Verificar elementos del segundo coleccionista
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "María García")
+        
+        // Capturar screenshot con todos los elementos verificados
+        screenshotTestRule.takeScreenshot("02-elementos-verificados")
     }
 
     /**
@@ -364,6 +400,9 @@ class CollectorListE2ETest {
         
         // Verificar que la navegación inferior está visible
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
+        
+        // Capturar screenshot de la barra de navegación
+        screenshotTestRule.takeScreenshot("barra-navegacion")
 
         // Verificar que las pestañas de navegación están presentes
         // Buscar los tabs en la navegación inferior (pueden estar en diferentes posiciones)
@@ -427,11 +466,20 @@ class CollectorListE2ETest {
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Juan Pérez")
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "María García")
         
+        // Capturar screenshot antes del scroll
+        screenshotTestRule.takeScreenshot("01-antes-scroll")
+        
         // Realizar scroll hacia abajo
         composeTestRule.onNodeWithText("Juan Pérez").performScrollTo()
         
+        // Capturar screenshot durante el scroll
+        screenshotTestRule.takeScreenshot("02-durante-scroll")
+        
         // Verificar que los coleccionistas posteriores están visibles después del scroll
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Carlos Rodríguez")
+        
+        // Capturar screenshot final con coleccionistas posteriores visibles
+        screenshotTestRule.takeScreenshot("03-después-scroll")
     }
 }
 

@@ -10,6 +10,7 @@ import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
 import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
@@ -41,6 +42,11 @@ class ArtistListE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
 
     /**
      * Helper function to create a test ViewModel with MockWebServer
@@ -96,6 +102,10 @@ class ArtistListE2ETest {
         // Assert
         // Verificar que el título está visible (buscar el del header, no el tab)
         composeTestRule.waitForIdle()
+        
+        // Capturar screenshot del estado inicial después de cargar
+        screenshotTestRule.takeScreenshot("01-lista-cargada")
+        
         val titleNodes = composeTestRule.onAllNodesWithText("Artistas")
         // El título del header debería estar en el primer nodo o segundo si hay tab
         if (titleNodes.fetchSemanticsNodes().size > 1) {
@@ -109,6 +119,9 @@ class ArtistListE2ETest {
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "Paul McCartney")
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "David Gilmour")
+        
+        // Capturar screenshot después de verificar los artistas
+        screenshotTestRule.takeScreenshot("02-artistas-verificados")
         
         // Verificar que la navegación inferior está presente
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
@@ -146,6 +159,9 @@ class ArtistListE2ETest {
         // Nota: No verificamos el CircularProgressIndicator directamente porque no tiene contentDescription
         // En su lugar, verificamos el texto de carga que está visible junto con el indicador
         CustomMatchers.verifyArtistsLoadingTextIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de carga
+        screenshotTestRule.takeScreenshot("estado-carga")
     }
 
     /**
@@ -182,6 +198,9 @@ class ArtistListE2ETest {
         
         // Verificar que el botón de reintento está visible
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error
+        screenshotTestRule.takeScreenshot("estado-error")
         
         // Verificar que el estado de carga ya no está visible
         CustomMatchers.verifyArtistsLoadingTextIsNotVisible(composeTestRule)
@@ -222,6 +241,9 @@ class ArtistListE2ETest {
         // Assert - Verificar estado de error inicial
         CustomMatchers.verifyArtistsErrorMessageIsVisible(composeTestRule)
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error inicial
+        screenshotTestRule.takeScreenshot("01-estado-error")
 
         // Act - Hacer clic en reintentar
         composeTestRule.onNodeWithText("Reintentar").performClick()
@@ -230,6 +252,9 @@ class ArtistListE2ETest {
         composeTestRule.waitForIdle()
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "Paul McCartney")
+        
+        // Capturar screenshot después del reintento exitoso
+        screenshotTestRule.takeScreenshot("02-después-reintento")
     }
 
     /**
@@ -279,6 +304,9 @@ class ArtistListE2ETest {
         composeTestRule.onNodeWithText("John Lennon")
             .assertDoesNotExist()
         
+        // Capturar screenshot de lista vacía
+        screenshotTestRule.takeScreenshot("lista-vacía")
+        
         // Verificar que la navegación está presente
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
     }
@@ -313,11 +341,19 @@ class ArtistListE2ETest {
         composeTestRule.waitForIdle()
 
         // Assert
+        composeTestRule.waitForIdle()
+        
+        // Capturar screenshot inicial de la lista
+        screenshotTestRule.takeScreenshot("01-lista-cargada")
+        
         // Verificar elementos específicos del primer artista
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
         
         // Verificar elementos del segundo artista
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "Paul McCartney")
+        
+        // Capturar screenshot con todos los elementos verificados
+        screenshotTestRule.takeScreenshot("02-elementos-verificados")
     }
 
     /**
@@ -367,6 +403,9 @@ class ArtistListE2ETest {
         
         // Verificar que la navegación inferior está visible
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
+        
+        // Capturar screenshot de la barra de navegación
+        screenshotTestRule.takeScreenshot("barra-navegacion")
 
         // Verificar que las pestañas de navegación están presentes
         // Buscar los tabs en la navegación inferior (pueden estar en diferentes posiciones)
@@ -425,11 +464,20 @@ class ArtistListE2ETest {
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "Paul McCartney")
         
+        // Capturar screenshot antes del scroll
+        screenshotTestRule.takeScreenshot("01-antes-scroll")
+        
         // Realizar scroll hacia abajo
         composeTestRule.onNodeWithText("John Lennon").performScrollTo()
         
+        // Capturar screenshot durante el scroll
+        screenshotTestRule.takeScreenshot("02-durante-scroll")
+        
         // Verificar que los artistas posteriores están visibles después del scroll
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "David Gilmour")
+        
+        // Capturar screenshot final con artistas posteriores visibles
+        screenshotTestRule.takeScreenshot("03-después-scroll")
     }
 }
 
