@@ -26,10 +26,31 @@ data class Collector(
     val comments: List<Any>? = null,
     
     @SerializedName("favoritePerformers")
-    val favoritePerformers: List<Any>? = null,
+    val favoritePerformers: List<Performer>? = null,
     
     @SerializedName("collectorAlbums")
-    val collectorAlbums: List<Any>? = null
+    val collectorAlbums: List<CollectorAlbum>? = null
+)
+
+/**
+ * Entidad que representa un álbum en la colección de un coleccionista
+ * Corresponde a la entidad CollectorAlbum del backend
+ */
+data class CollectorAlbum(
+    @SerializedName("id")
+    val id: Int,
+    
+    @SerializedName("price")
+    val price: Int,
+    
+    @SerializedName("status")
+    val status: String,
+    
+    @SerializedName("album")
+    val album: Album? = null,
+    
+    @SerializedName("albumId")
+    val albumId: Int? = null
 )
 
 /**

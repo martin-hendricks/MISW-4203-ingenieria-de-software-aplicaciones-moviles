@@ -17,6 +17,7 @@ import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.screens.ArtistListScreen
 import com.miso.vinilos.views.screens.ArtistDetailScreen
 import com.miso.vinilos.views.screens.CollectorListScreen
+import com.miso.vinilos.views.screens.CollectorDetailScreen
 import com.miso.vinilos.views.screens.ProfileScreen
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.viewmodels.MusicianViewModel
@@ -112,9 +113,24 @@ fun AppNavigation(
                 CollectorListScreen(
                     collectorViewModel = collectorViewModel,
                     onCollectorClick = { collector ->
-                        // TODO: Implementar navegación al detalle del coleccionista cuando se necesite
-                        // navController.navigate(NavigationRoutes.CollectorDetail.createRoute(collector.id))
+                        navController.navigate(NavigationRoutes.CollectorDetail.createRoute(collector.id))
                     }
+                )
+            }
+            
+            // Pantalla de Detalle de Coleccionista
+            composable(
+                route = NavigationRoutes.CollectorDetail.route,
+                arguments = listOf(
+                    navArgument("collectorId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val collectorId = backStackEntry.arguments?.getInt("collectorId") ?: 0
+                val collectorViewModel: CollectorViewModel = viewModel()
+                CollectorDetailScreen(
+                    collectorId = collectorId,
+                    collectorViewModel = collectorViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
             

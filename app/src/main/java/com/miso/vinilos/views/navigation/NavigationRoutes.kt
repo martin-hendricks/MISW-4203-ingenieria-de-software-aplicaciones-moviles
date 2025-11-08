@@ -14,6 +14,9 @@ sealed class NavigationRoutes(val route: String) {
         fun createRoute(musicianId: Int) = "artists/$musicianId"
     }
     object Collectors : NavigationRoutes("collectors")
+    object CollectorDetail : NavigationRoutes("collectors/{collectorId}") {
+        fun createRoute(collectorId: Int) = "collectors/$collectorId"
+    }
     object Profile : NavigationRoutes("profile")
 }
 
