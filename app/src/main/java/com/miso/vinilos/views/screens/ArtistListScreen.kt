@@ -9,25 +9,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.miso.vinilos.model.data.Musician
+import com.miso.vinilos.model.data.UserRole
 import com.miso.vinilos.views.components.VinilosListItem
 import com.miso.vinilos.views.components.VinilosListView
 import com.miso.vinilos.viewmodels.MusicianUiState
 import com.miso.vinilos.viewmodels.MusicianViewModel
+import com.miso.vinilos.viewmodels.ProfileViewModel
 
 /**
  * Pantalla que muestra la lista de artistas (músicos)
  * Implementa el patrón MVVM con Jetpack Compose
  *
  * @param musicianViewModel ViewModel que gestiona el estado de los músicos
+ * @param profileViewModel ViewModel que gestiona el perfil del usuario
  * @param onArtistClick Callback que se ejecuta cuando se hace clic en un artista
  */
 @Composable
 fun ArtistListScreen(
     musicianViewModel: MusicianViewModel,
+    profileViewModel: ProfileViewModel,
     onArtistClick: (Musician) -> Unit
 ) {
     // Observa el estado de la UI desde el ViewModel
     val uiState by musicianViewModel.uiState.collectAsStateWithLifecycle()
+    val userRole by profileViewModel.userRole.collectAsStateWithLifecycle()
     
     // Renderiza según el estado actual
     when (val currentState = uiState) {
@@ -37,7 +42,11 @@ fun ArtistListScreen(
         is MusicianUiState.Success -> {
             ArtistsList(
                 musicians = currentState.musicians,
-                onArtistClick = onArtistClick
+                userRole = userRole,
+                onArtistClick = onArtistClick,
+                onAddArtist = {
+                    // TODO: Navegar a pantalla de agregar artista
+                }
             )
         }
         is MusicianUiState.Error -> {
@@ -53,16 +62,26 @@ fun ArtistListScreen(
  * Componente que muestra la lista de artistas usando VinilosListView
  * 
  * @param musicians Lista de músicos a mostrar
+ * @param userRole Rol actual del usuario
  * @param onArtistClick Callback cuando se selecciona un artista
+ * @param onAddArtist Callback cuando se presiona el botón de agregar
  */
 @Composable
 private fun ArtistsList(
     musicians: List<Musician>,
-    onArtistClick: (Musician) -> Unit
+    userRole: UserRole,
+    onArtistClick: (Musician) -> Unit,
+    onAddArtist: () -> Unit
 ) {
     VinilosListView(
         title = "Artistas",
-        items = musicians
+        items = musicians,
+        // Solo muestra el botón de agregar si el usuario es coleccionista
+        onPlusClick = if (userRole == UserRole.COLLECTOR) {
+            { onAddArtist() }
+        } else {
+            null
+        }
     ) { musician ->
         VinilosListItem(
             imageUrl = musician.image,

@@ -85,6 +85,7 @@ fun AppNavigation(
                 val musicianViewModel: MusicianViewModel = viewModel()
                 ArtistListScreen(
                     musicianViewModel = musicianViewModel,
+                    profileViewModel = sharedProfileViewModel,
                     onArtistClick = { musician ->
                         navController.navigate(NavigationRoutes.ArtistDetail.createRoute(musician.id))
                     }
@@ -112,6 +113,7 @@ fun AppNavigation(
                 val collectorViewModel: CollectorViewModel = viewModel()
                 CollectorListScreen(
                     collectorViewModel = collectorViewModel,
+                    profileViewModel = sharedProfileViewModel,
                     onCollectorClick = { collector ->
                         navController.navigate(NavigationRoutes.CollectorDetail.createRoute(collector.id))
                     }
