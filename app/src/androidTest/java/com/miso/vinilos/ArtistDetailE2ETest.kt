@@ -11,6 +11,7 @@ import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
 import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.viewmodels.MusicianViewModel
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.screens.ArtistDetailScreen
@@ -42,6 +43,11 @@ class ArtistDetailE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
 
     /**
      * Desplaza la lista hasta un texto objetivo y asegura su visibilidad
@@ -124,6 +130,9 @@ class ArtistDetailE2ETest {
 
         // Verificar que el artista está visible
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
+        
+        // Capturar screenshot de la pantalla de detalle cargada
+        screenshotTestRule.takeScreenshot("01-detalle-cargado")
     }
 
     /**
@@ -155,6 +164,9 @@ class ArtistDetailE2ETest {
 
         // Assert - Verificar que el estado de carga es visible inicialmente
         CustomMatchers.verifyArtistDetailLoadingTextIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de carga
+        screenshotTestRule.takeScreenshot("estado-carga")
     }
 
     /**
@@ -203,6 +215,9 @@ class ArtistDetailE2ETest {
 
         // Verificar que el botón de reintento está visible
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error
+        screenshotTestRule.takeScreenshot("estado-error")
 
         // Verificar que el estado de carga ya no está visible
         CustomMatchers.verifyArtistDetailLoadingTextIsNotVisible(composeTestRule)
@@ -257,6 +272,9 @@ class ArtistDetailE2ETest {
         }
         
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error inicial
+        screenshotTestRule.takeScreenshot("01-estado-error")
 
         // Act - Hacer clic en reintentar
         composeTestRule.onNodeWithText("Reintentar").performClick()
@@ -267,6 +285,9 @@ class ArtistDetailE2ETest {
                 .fetchSemanticsNodes().isNotEmpty()
         }
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
+        
+        // Capturar screenshot después del reintento exitoso
+        screenshotTestRule.takeScreenshot("02-después-reintento")
     }
 
     /**
@@ -306,6 +327,9 @@ class ArtistDetailE2ETest {
         // Verificar información básica
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
         CustomMatchers.verifyArtistDescriptionIsVisible(composeTestRule, "Músico y compositor británico")
+        
+        // Capturar screenshot con todos los detalles
+        screenshotTestRule.takeScreenshot("detalles-completos")
     }
 
     /**
@@ -342,12 +366,18 @@ class ArtistDetailE2ETest {
 
         // Verificar que el botón de volver está visible
         composeTestRule.onNodeWithContentDescription("Volver").assertIsDisplayed()
+        
+        // Capturar screenshot antes de presionar volver
+        screenshotTestRule.takeScreenshot("01-antes-volver")
 
         // Hacer clic en el botón de volver
         composeTestRule.onNodeWithContentDescription("Volver").performClick()
 
         // Verificar que se llamó al callback
         assert(backPressed) { "El callback onBack no fue llamado" }
+        
+        // Capturar screenshot después de presionar volver
+        screenshotTestRule.takeScreenshot("02-después-volver")
     }
 }
 

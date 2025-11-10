@@ -11,6 +11,7 @@ import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
 import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.viewmodels.CollectorViewModel
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.screens.CollectorDetailScreen
@@ -42,6 +43,11 @@ class CollectorDetailE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
 
     /**
      * Desplaza la lista hasta un texto objetivo y asegura su visibilidad
@@ -127,6 +133,9 @@ class CollectorDetailE2ETest {
 
         // Verificar que el coleccionista está visible
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Juan Pérez")
+        
+        // Capturar screenshot de la pantalla de detalle cargada
+        screenshotTestRule.takeScreenshot("01-detalle-cargado")
     }
 
     /**
@@ -158,6 +167,9 @@ class CollectorDetailE2ETest {
 
         // Assert - Verificar que el estado de carga es visible inicialmente
         CustomMatchers.verifyCollectorDetailLoadingTextIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de carga
+        screenshotTestRule.takeScreenshot("estado-carga")
     }
 
     /**
@@ -197,6 +209,9 @@ class CollectorDetailE2ETest {
         // Verificar que el mensaje de error está visible
         composeTestRule.onNodeWithText("Error al cargar coleccionista", substring = true)
             .assertIsDisplayed()
+        
+        // Capturar screenshot del estado de error
+        screenshotTestRule.takeScreenshot("estado-error")
 
         // Verificar que el estado de carga ya no está visible
         CustomMatchers.verifyCollectorDetailLoadingTextIsNotVisible(composeTestRule)
@@ -241,6 +256,9 @@ class CollectorDetailE2ETest {
         }
         composeTestRule.onNodeWithText("Error al cargar coleccionista", substring = true)
             .assertIsDisplayed()
+        
+        // Capturar screenshot del estado de error inicial
+        screenshotTestRule.takeScreenshot("01-estado-error")
 
         // Nota: Como no hay botón de reintento, este test solo verifica que el error se muestra
         // No podemos probar la funcionalidad de reintento en CollectorDetailScreen
@@ -291,6 +309,9 @@ class CollectorDetailE2ETest {
 
         // Verificar información básica
         CustomMatchers.verifyCollectorIsVisible(composeTestRule, "Juan Pérez")
+        
+        // Capturar screenshot con todos los detalles
+        screenshotTestRule.takeScreenshot("detalles-completos")
     }
 
     /**
@@ -327,12 +348,18 @@ class CollectorDetailE2ETest {
 
         // Verificar que el botón de volver está visible
         composeTestRule.onNodeWithContentDescription("Volver").assertIsDisplayed()
+        
+        // Capturar screenshot antes de presionar volver
+        screenshotTestRule.takeScreenshot("01-antes-volver")
 
         // Hacer clic en el botón de volver
         composeTestRule.onNodeWithContentDescription("Volver").performClick()
 
         // Verificar que se llamó al callback
         assert(backPressed) { "El callback onBack no fue llamado" }
+        
+        // Capturar screenshot después de presionar volver
+        screenshotTestRule.takeScreenshot("02-después-volver")
     }
 }
 
