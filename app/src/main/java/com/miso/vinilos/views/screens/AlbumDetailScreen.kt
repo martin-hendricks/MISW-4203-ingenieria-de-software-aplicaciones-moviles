@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,8 +30,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.miso.vinilos.model.data.Album
+import android.util.Log
 import com.miso.vinilos.model.data.Comment
 import com.miso.vinilos.model.data.Track
+import com.miso.vinilos.model.network.NetworkConstants
+import com.miso.vinilos.utils.ImageUrlHelper
 import com.miso.vinilos.viewmodels.AlbumDetailUiState
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.views.theme.LightGreen
@@ -170,12 +174,22 @@ private fun AlbumCoverSection(album: Album) {
             .padding(bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Normalizar la URL del cover del álbum
+        val normalizedCoverUrl = remember(album.cover) {
+            ImageUrlHelper.normalizeImageUrl(album.cover, NetworkConstants.BASE_URL)
+        }
+        
         // Cover del álbum
-        SubcomposeAsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(album.cover)
-                .crossfade(true)
-                .build(),
+        if (normalizedCoverUrl != null) {
+            SubcomposeAsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(normalizedCoverUrl)
+                    .crossfade(true)
+                    .allowHardware(false) // Mejor compatibilidad con diferentes formatos (PNG, JPG, etc.)
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .networkCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .build(),
             contentDescription = "Cover de ${album.name}",
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -195,7 +209,9 @@ private fun AlbumCoverSection(album: Album) {
                     )
                 }
             },
-            error = {
+            error = { error ->
+                // Log del error para debugging
+                Log.e("AlbumDetailScreen", "Error cargando cover: $normalizedCoverUrl", error.result.throwable)
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -211,6 +227,24 @@ private fun AlbumCoverSection(album: Album) {
                 }
             }
         )
+        } else {
+            // Placeholder si la URL no es válida
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFD4C8A8)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.BrokenImage,
+                    contentDescription = "Imagen no disponible",
+                    tint = MidGreen,
+                    modifier = Modifier.size(64.dp)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 

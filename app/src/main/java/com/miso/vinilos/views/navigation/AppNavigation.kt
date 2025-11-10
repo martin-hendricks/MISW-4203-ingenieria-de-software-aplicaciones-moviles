@@ -14,8 +14,14 @@ import androidx.navigation.NavType
 import com.miso.vinilos.views.components.BottomNavigationBar
 import com.miso.vinilos.views.screens.AlbumListScreen
 import com.miso.vinilos.views.screens.AlbumDetailScreen
+import com.miso.vinilos.views.screens.ArtistListScreen
+import com.miso.vinilos.views.screens.ArtistDetailScreen
+import com.miso.vinilos.views.screens.CollectorListScreen
+import com.miso.vinilos.views.screens.CollectorDetailScreen
 import com.miso.vinilos.views.screens.ProfileScreen
 import com.miso.vinilos.viewmodels.AlbumViewModel
+import com.miso.vinilos.viewmodels.MusicianViewModel
+import com.miso.vinilos.viewmodels.CollectorViewModel
 import com.miso.vinilos.viewmodels.ProfileViewModel
 
 /**
@@ -23,12 +29,16 @@ import com.miso.vinilos.viewmodels.ProfileViewModel
  *
  * @param navController Controlador de navegación
  * @param albumViewModel ViewModel de álbumes (opcional, para testing)
+ * @param musicianViewModel ViewModel de músicos (opcional, para testing)
+ * @param collectorViewModel ViewModel de coleccionistas (opcional, para testing)
  * @param profileViewModel ViewModel de perfil (opcional, para testing)
  */
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     albumViewModel: AlbumViewModel? = null,
+    musicianViewModel: MusicianViewModel? = null,
+    collectorViewModel: CollectorViewModel? = null,
     profileViewModel: ProfileViewModel? = null
 ) {
     // ViewModels compartidos entre pantallas
@@ -76,12 +86,58 @@ fun AppNavigation(
 
             // Pantalla de Artistas
             composable(NavigationRoutes.Artists.route) {
-                // TODO: Implementar pantalla de artistas
+                val sharedMusicianViewModel = musicianViewModel ?: viewModel()
+                ArtistListScreen(
+                    musicianViewModel = sharedMusicianViewModel,
+                    profileViewModel = sharedProfileViewModel,
+                    onArtistClick = { musician ->
+                        navController.navigate(NavigationRoutes.ArtistDetail.createRoute(musician.id))
+                    }
+                )
+            }
+            
+            // Pantalla de Detalle de Artista
+            composable(
+                route = NavigationRoutes.ArtistDetail.route,
+                arguments = listOf(
+                    navArgument("musicianId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val musicianId = backStackEntry.arguments?.getInt("musicianId") ?: 0
+                val sharedMusicianViewModel = musicianViewModel ?: viewModel()
+                ArtistDetailScreen(
+                    musicianId = musicianId,
+                    musicianViewModel = sharedMusicianViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             
             // Pantalla de Coleccionistas
             composable(NavigationRoutes.Collectors.route) {
-                // TODO: Implementar pantalla de coleccionistas
+                val sharedCollectorViewModel = collectorViewModel ?: viewModel()
+                CollectorListScreen(
+                    collectorViewModel = sharedCollectorViewModel,
+                    profileViewModel = sharedProfileViewModel,
+                    onCollectorClick = { collector ->
+                        navController.navigate(NavigationRoutes.CollectorDetail.createRoute(collector.id))
+                    }
+                )
+            }
+            
+            // Pantalla de Detalle de Coleccionista
+            composable(
+                route = NavigationRoutes.CollectorDetail.route,
+                arguments = listOf(
+                    navArgument("collectorId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val collectorId = backStackEntry.arguments?.getInt("collectorId") ?: 0
+                val sharedCollectorViewModel = collectorViewModel ?: viewModel()
+                CollectorDetailScreen(
+                    collectorId = collectorId,
+                    collectorViewModel = sharedCollectorViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             
             // Pantalla de Perfil

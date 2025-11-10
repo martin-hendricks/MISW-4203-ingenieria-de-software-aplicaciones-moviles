@@ -14,6 +14,7 @@ import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
 import com.miso.vinilos.rules.MockWebServerRule
+import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.screens.AlbumDetailScreen
@@ -34,7 +35,7 @@ import org.junit.runner.RunWith
  * - Visualización de lista de canciones con sus duraciones
  * - Visualización de comentarios con ratings
  * - Manejo de casos edge (álbumes sin tracks, sin comentarios)
- * - Funcionalidad de reintento tras error
+ * - Funcionalidad de reintredsfsdnto tras error
  *
  * Las pruebas usan MockWebServer para simular respuestas del API
  * y siguen el mismo patrón que AlbumListE2ETest
@@ -48,6 +49,11 @@ class AlbumDetailE2ETest {
 
     @get:Rule
     val mockWebServerRule = MockWebServerRule()
+
+    @get:Rule
+    val screenshotTestRule = ScreenshotTestRule().apply {
+        setComposeTestRule(composeTestRule)
+    }
     /**
      * Desplaza la lista hasta un texto objetivo y asegura su visibilidad
      */
@@ -129,6 +135,9 @@ class AlbumDetailE2ETest {
         // Verificar que estamos en la pantalla de detalle buscando elementos únicos del detalle
         // El título "Detalles del Álbum" solo aparece en la pantalla de detalle
         composeTestRule.onNodeWithText("Detalles del Álbum").assertExists()
+        
+        // Capturar screenshot de la pantalla de detalle cargada
+        screenshotTestRule.takeScreenshot("01-detalle-cargado")
 
         // Verificar que el artista está visible
         composeTestRule.onNodeWithText("The Beatles", useUnmergedTree = true).assertExists()
@@ -139,6 +148,9 @@ class AlbumDetailE2ETest {
         // Asegurar que la sección de comentarios esté a la vista antes de validar
         scrollToAndAssertVisible("Comentarios")
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
+        
+        // Capturar screenshot mostrando la sección de comentarios
+        screenshotTestRule.takeScreenshot("02-comentarios-visible")
 
         // Verificar que la descripción está visible
         CustomMatchers.verifyAlbumDescriptionIsVisible(composeTestRule, "El último álbum grabado por The Beatles")
@@ -173,6 +185,9 @@ class AlbumDetailE2ETest {
 
         // Assert - Verificar que el estado de carga es visible inicialmente
         CustomMatchers.verifyAlbumDetailLoadingTextIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de carga
+        screenshotTestRule.takeScreenshot("estado-carga")
     }
 
     /**
@@ -213,6 +228,9 @@ class AlbumDetailE2ETest {
 
         // Verificar que el botón de reintento está visible
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error
+        screenshotTestRule.takeScreenshot("estado-error")
 
         // Verificar que el estado de carga ya no está visible
         CustomMatchers.verifyAlbumDetailLoadingTextIsNotVisible(composeTestRule)
@@ -256,6 +274,9 @@ class AlbumDetailE2ETest {
         }
         CustomMatchers.verifyAlbumDetailErrorMessageIsVisible(composeTestRule)
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del estado de error inicial
+        screenshotTestRule.takeScreenshot("01-estado-error")
 
         // Act - Hacer clic en reintentar
         composeTestRule.onNodeWithText("Reintentar").performClick()
@@ -267,6 +288,9 @@ class AlbumDetailE2ETest {
         }
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyPerformerIsVisible(composeTestRule, "The Beatles")
+        
+        // Capturar screenshot después del reintento exitoso
+        screenshotTestRule.takeScreenshot("02-después-reintento")
     }
 
     /**
@@ -312,6 +336,9 @@ class AlbumDetailE2ETest {
         CustomMatchers.verifyGenreIsVisible(composeTestRule, "Rock")
         CustomMatchers.verifyRecordLabelIsVisible(composeTestRule, "Sony Music")
         CustomMatchers.verifyReleaseDateIsVisible(composeTestRule, "26/09/1969")
+        
+        // Capturar screenshot con todos los detalles
+        screenshotTestRule.takeScreenshot("detalles-completos")
     }
 
     /**
@@ -362,6 +389,9 @@ class AlbumDetailE2ETest {
         CustomMatchers.verifyTrackDurationIsVisible(composeTestRule, "4:20")
         CustomMatchers.verifyTrackDurationIsVisible(composeTestRule, "3:03")
         CustomMatchers.verifyTrackDurationIsVisible(composeTestRule, "3:27")
+        
+        // Capturar screenshot de la lista de canciones
+        screenshotTestRule.takeScreenshot("lista-canciones")
     }
 
     /**
@@ -412,6 +442,9 @@ class AlbumDetailE2ETest {
         // Verificar que los ratings están visibles
         CustomMatchers.verifyRatingIsVisible(composeTestRule, 5)
         CustomMatchers.verifyRatingIsVisible(composeTestRule, 4)
+        
+        // Capturar screenshot de los comentarios
+        screenshotTestRule.takeScreenshot("comentarios-completos")
     }
 
     /**
@@ -444,9 +477,12 @@ class AlbumDetailE2ETest {
 
         // Assert - esperar a que cargue el detalle
         composeTestRule.waitUntil(timeoutMillis = 3_000) {
-            composeTestRule.onAllNodesWithText("Lista de Canciones")
+            composeTestRule.onAllNodesWithText("Detalles del Álbum")
                 .fetchSemanticsNodes().isNotEmpty()
         }
+
+        // Asegurar que la sección de tracks esté a la vista
+        scrollToAndAssertVisible("Lista de Canciones")
 
         // Verificar que el álbum está visible
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Album Without Tracks")
@@ -456,6 +492,9 @@ class AlbumDetailE2ETest {
 
         // Verificar que se muestra el mensaje de "No hay canciones"
         CustomMatchers.verifyNoTracksMessageIsVisible(composeTestRule)
+        
+        // Capturar screenshot sin canciones
+        screenshotTestRule.takeScreenshot("sin-canciones")
     }
 
     /**
@@ -501,6 +540,9 @@ class AlbumDetailE2ETest {
 
         // Verificar que se muestra el mensaje de "No hay comentarios"
         CustomMatchers.verifyNoCommentsMessageIsVisible(composeTestRule)
+        
+        // Capturar screenshot sin comentarios
+        screenshotTestRule.takeScreenshot("sin-comentarios")
     }
 
     /**
@@ -542,6 +584,9 @@ class AlbumDetailE2ETest {
 
         // Verificar que se muestra "Artista desconocido"
         CustomMatchers.verifyUnknownArtistIsVisible(composeTestRule)
+        
+        // Capturar screenshot con artista desconocido
+        screenshotTestRule.takeScreenshot("artista-desconocido")
     }
 
     /**
@@ -582,6 +627,9 @@ class AlbumDetailE2ETest {
 
         // Verificar que el botón de reintento está visible
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
+        
+        // Capturar screenshot del error 404
+        screenshotTestRule.takeScreenshot("error-404")
     }
 
     /**
@@ -618,12 +666,18 @@ class AlbumDetailE2ETest {
 
         // Verificar que el botón de volver está visible
         composeTestRule.onNodeWithContentDescription("Volver").assertIsDisplayed()
+        
+        // Capturar screenshot antes de presionar volver
+        screenshotTestRule.takeScreenshot("01-antes-volver")
 
         // Hacer clic en el botón de volver
         composeTestRule.onNodeWithContentDescription("Volver").performClick()
 
         // Verificar que se llamó al callback
         assert(backPressed) { "El callback onBack no fue llamado" }
+        
+        // Capturar screenshot después de presionar volver
+        screenshotTestRule.takeScreenshot("02-después-volver")
     }
 
     /**
@@ -669,6 +723,9 @@ class AlbumDetailE2ETest {
         // Verificar que los comentarios ahora están visibles
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
         CustomMatchers.verifyCommentIsVisible(composeTestRule, "Excelente álbum")
+        
+        // Capturar screenshot del scroll completo
+        screenshotTestRule.takeScreenshot("scroll-completo")
     }
 
     /**
@@ -722,5 +779,8 @@ class AlbumDetailE2ETest {
         scrollToAndAssertVisible("Comentarios")
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
         CustomMatchers.verifyCommentIsVisible(composeTestRule, "Excelente álbum")
+        
+        // Capturar screenshot con toda la información completa
+        screenshotTestRule.takeScreenshot("información-completa")
     }
 }
