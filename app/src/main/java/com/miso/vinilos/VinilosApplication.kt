@@ -12,8 +12,10 @@ import java.util.concurrent.TimeUnit
  * Application class para configurar componentes globales de la app
  */
 class VinilosApplication : Application(), ImageLoaderFactory {
-    
-    private val TAG = "VinilosApplication"
+
+    companion object {
+        private const val TAG = "VinilosApplication"
+    }
     
     override fun onCreate() {
         super.onCreate()
