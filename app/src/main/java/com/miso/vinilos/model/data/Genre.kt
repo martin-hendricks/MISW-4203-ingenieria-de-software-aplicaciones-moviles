@@ -18,6 +18,4 @@ enum class Genre(val displayName: String) {
     @SerializedName("Folk")
     FOLK("Folk");
 
-    companion object {
-    }
 }

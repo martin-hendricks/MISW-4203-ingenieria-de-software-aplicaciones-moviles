@@ -14,7 +14,5 @@ data class Comment(
     
     @SerializedName("rating")
     val rating: Int
-) {
-
-}
+)
 

@@ -7,7 +7,6 @@ enum class UserRole(val displayName: String, val description: String) {
     VISITOR("Visitante", "Solo puede ver contenido"),
     COLLECTOR("Coleccionista", "Puede agregar y gestionar álbumes");
     
-    companion object {
-    }
+    companion object
 }
 

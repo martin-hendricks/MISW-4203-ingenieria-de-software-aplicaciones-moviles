@@ -189,8 +189,6 @@ class MusicianViewModelTest {
         // El estado puede estar vacío si aún está cargando o tener premios si ya se cargaron
         val prizesState = viewModel.prizesState.value
         assertNotNull(prizesState)
-        // Verificamos que el estado es válido (puede estar vacío o tener premios)
-        assertTrue(prizesState.isNotEmpty() || prizesState.isEmpty())
     }
 
     @Test

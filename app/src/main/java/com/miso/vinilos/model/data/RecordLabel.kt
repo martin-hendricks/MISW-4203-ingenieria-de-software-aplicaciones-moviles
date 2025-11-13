@@ -21,6 +21,4 @@ enum class RecordLabel(val displayName: String) {
     @SerializedName("Fania Records")
     FANIA("Fania Records");
 
-    companion object {
-    }
 }

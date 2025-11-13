@@ -145,25 +145,54 @@ class AlbumRepositoryTest {
 
     @Test
     fun `createAlbum success returns created album`() = runTest {
-        // Given
-        val albumDTO = AlbumCreateDTO(
-            name = "New Album",
-            cover = "https://example.com/cover.jpg",
-            releaseDate = Date(),
-            description = "Description",
-            genre = Genre.ROCK,
-            recordLabel = RecordLabel.SONY
-        )
-        val createdAlbum = createTestAlbum(1, "New Album")
-        val response = Response.success(createdAlbum)
-        coEvery { apiService.createAlbum(albumDTO) } returns response
+        // Probar con cada género del enum
+        Genre.entries.forEach { genre ->
+            // Given
+            val albumDTO = AlbumCreateDTO(
+                name = "New Album - ${genre.displayName}",
+                cover = "https://example.com/cover.jpg",
+                releaseDate = Date(),
+                description = "Description for ${genre.displayName}",
+                genre = genre,
+                recordLabel = RecordLabel.SONY
+            )
+            val createdAlbum = createTestAlbum(1, "New Album - ${genre.displayName}")
+            val response = Response.success(createdAlbum)
+            coEvery { apiService.createAlbum(albumDTO) } returns response
 
-        // When
-        val result = repository.createAlbum(albumDTO)
+            // When
+            val result = repository.createAlbum(albumDTO)
 
-        // Then
-        assertTrue(result.isSuccess)
-        assertEquals(createdAlbum, result.getOrNull())
+            // Then
+            assertTrue("Failed for genre: ${genre.displayName}", result.isSuccess)
+            assertEquals(createdAlbum, result.getOrNull())
+        }
+    }
+
+    @Test
+    fun `createAlbum success returns created album record`() = runTest {
+        // Probar con cada género del enum
+        RecordLabel.entries.forEach { recordLabel ->
+            // Given
+            val albumDTO = AlbumCreateDTO(
+                name = "New Album",
+                cover = "https://example.com/cover.jpg",
+                releaseDate = Date(),
+                description = "Description",
+                genre = Genre.ROCK,
+                recordLabel = recordLabel
+            )
+            val createdAlbum = createTestAlbum(1, "New Album")
+            val response = Response.success(createdAlbum)
+            coEvery { apiService.createAlbum(albumDTO) } returns response
+
+            // When
+            val result = repository.createAlbum(albumDTO)
+
+            // Then
+            assertTrue(result.isSuccess)
+            assertEquals(createdAlbum, result.getOrNull())
+        }
     }
 
     @Test

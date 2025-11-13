@@ -21,6 +21,4 @@ data class Performer(
     
     @SerializedName("albums")
     val albums: List<Album>? = null
-) {
-}
-
+)
