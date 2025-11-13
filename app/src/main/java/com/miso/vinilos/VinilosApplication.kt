@@ -16,11 +16,7 @@ class VinilosApplication : Application(), ImageLoaderFactory {
     companion object {
         private const val TAG = "VinilosApplication"
     }
-    
-    override fun onCreate() {
-        super.onCreate()
-    }
-    
+
     /**
      * Configura el ImageLoader de Coil con soporte mejorado para PNG y otros formatos
      * Coil 2.7.0 ya incluye soporte para PNG, JPG, GIF, WebP, etc. por defecto
