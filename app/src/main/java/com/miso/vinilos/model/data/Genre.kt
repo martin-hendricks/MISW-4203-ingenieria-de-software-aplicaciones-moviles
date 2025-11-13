@@ -23,7 +23,7 @@ enum class Genre(val displayName: String) {
          * Obtiene el enum a partir del nombre de display
          */
         fun fromDisplayName(name: String): Genre? {
-            return values().find { it.displayName == name }
+            return Genre.entries.find { it.displayName == name }
         }
     }
 }

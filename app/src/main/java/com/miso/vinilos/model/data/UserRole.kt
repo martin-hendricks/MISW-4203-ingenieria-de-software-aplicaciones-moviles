@@ -9,7 +9,7 @@ enum class UserRole(val displayName: String, val description: String) {
     
     companion object {
         fun fromDisplayName(name: String): UserRole {
-            return values().find { it.displayName == name } ?: VISITOR
+            return UserRole.entries.find { it.displayName == name } ?: VISITOR
         }
     }
 }

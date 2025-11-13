@@ -54,13 +54,7 @@ data class Album(
     fun getTracksCount(): Int {
         return tracks?.size ?: 0
     }
-    
-    /**
-     * Retorna la cantidad de comentarios del álbum
-     */
-    fun getCommentsCount(): Int {
-        return comments?.size ?: 0
-    }
+
 }
 
 /**

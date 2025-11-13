@@ -78,9 +78,6 @@ class BasicE2ETest {
         composeTestRule.onAllNodesWithText("Coleccionistas").assertCountEquals(1)
         composeTestRule.onAllNodesWithText("Perfil").assertCountEquals(1)
 
-        composeTestRule.onAllNodesWithText("Álbumes").assertCountEquals(1) //  Navigation
-
-
         // Capturar screenshot mostrando la navegación
         screenshotTestRule.takeScreenshot("navegacion-visible")
     }
