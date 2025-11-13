@@ -23,7 +23,7 @@ class CollectorRepository(
     suspend fun getCollectors(): Result<List<Collector>> {
         return try {
             val response = apiService.getCollectors()
-            android.util.Log.d("CollectorRepository", "getCollectors: Response code=${response.code()}, isSuccessful=${response.isSuccessful()}")
+            android.util.Log.d("CollectorRepository", "getCollectors: Response code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful && response.body() != null) {
                 val collectors = response.body()!!
                 // Log detallado de cada coleccionista para ver qué campos vienen
@@ -49,7 +49,7 @@ class CollectorRepository(
     suspend fun getCollector(id: Int): Result<Collector> {
         return try {
             val response = apiService.getCollector(id)
-            Log.d("CollectorRepository", "getCollector($id): Response code=${response.code()}, isSuccessful=${response.isSuccessful()}")
+            Log.d("CollectorRepository", "getCollector($id): Response code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful && response.body() != null) {
                 val collector = response.body()!!
                 Log.d("CollectorRepository", "getCollector($id): Collector parseado exitosamente - id=${collector.id}, name=${collector.name}")

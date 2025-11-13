@@ -40,7 +40,7 @@ class PrizeRepository(
     suspend fun getPrize(id: Int): Result<Prize> {
         return try {
             val response = apiService.getPrize(id)
-            android.util.Log.d("PrizeRepository", "getPrize($id): Response code=${response.code()}, isSuccessful=${response.isSuccessful()}")
+            android.util.Log.d("PrizeRepository", "getPrize($id): Response code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful && response.body() != null) {
                 val prize = response.body()!!
                 android.util.Log.d("PrizeRepository", "getPrize($id): Premio parseado exitosamente - id=${prize.id}, name=${prize.name}")
