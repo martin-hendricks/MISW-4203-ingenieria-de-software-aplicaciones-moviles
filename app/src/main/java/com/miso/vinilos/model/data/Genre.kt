@@ -19,11 +19,5 @@ enum class Genre(val displayName: String) {
     FOLK("Folk");
 
     companion object {
-        /**
-         * Obtiene el enum a partir del nombre de display
-         */
-        fun fromDisplayName(name: String): Genre? {
-            return Genre.entries.find { it.displayName == name }
-        }
     }
 }

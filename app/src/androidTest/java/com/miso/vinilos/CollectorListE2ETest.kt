@@ -131,7 +131,6 @@ class CollectorListE2ETest {
     @Test
     fun testLoadingStateDisplay() = runTest {
         // Arrange - Configurar respuesta con delay para simular carga lenta
-        val testCollectors = TestDataFactory.createTestCollectors()
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createTimeoutResponse()
         )

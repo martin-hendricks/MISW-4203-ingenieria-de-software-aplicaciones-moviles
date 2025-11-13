@@ -59,23 +59,7 @@ object CustomMatchers {
         return composeTestRule.onNodeWithText("Reintentar")
             .assertIsDisplayed()
     }
-    
-    /**
-     * Verifica que el botón de agregar (+) esté visible
-     */
-    fun verifyAddButtonIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Agregar")
-            .assertIsDisplayed()
-    }
-    
-    /**
-     * Verifica que el botón de agregar (+) no esté visible
-     */
-    fun verifyAddButtonIsNotVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Agregar")
-            .assertIsNotDisplayed()
-    }
-    
+
     /**
      * Verifica que un álbum específico esté visible en la lista
      */
@@ -154,33 +138,7 @@ object CustomMatchers {
         return composeTestRule.onNodeWithText("Cargando")
             .assertIsDisplayed()
     }
-    
-    /**
-     * Verifica que el indicador de progreso circular no esté visible
-     */
-    fun verifyCircularProgressIndicatorIsNotVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Cargando")
-            .assertIsNotDisplayed()
-    }
-    
-    /**
-     * Verifica que un mensaje de error específico esté visible
-     */
-    fun verifySpecificErrorMessageIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule, errorMessage: String): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText(errorMessage)
-            .assertIsDisplayed()
-    }
-    
-    /**
-     * Verifica que múltiples performers estén visibles (separados por comas)
-     */
-    fun verifyMultiplePerformersAreVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule, performers: List<String>) {
-        performers.forEach { performer ->
-            composeTestRule.onNodeWithText(performer)
-                .assertIsDisplayed()
-        }
-    }
-    
+
     /**
      * Verifica que la imagen de un álbum esté visible
      * (esto es más complejo en Compose, pero podemos verificar que el álbum está presente)
@@ -215,14 +173,6 @@ object CustomMatchers {
      */
     fun verifyAlbumDetailErrorMessageIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
         return composeTestRule.onNodeWithText("Error al cargar el álbum")
-            .assertIsDisplayed()
-    }
-
-    /**
-     * Verifica que el botón de volver esté visible
-     */
-    fun verifyBackButtonIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Volver")
             .assertIsDisplayed()
     }
 
@@ -339,14 +289,6 @@ object CustomMatchers {
     // ===== Matchers para Artist List Screen =====
 
     /**
-     * Verifica que el título "Artistas" esté visible
-     */
-    fun verifyArtistsTitleIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onAllNodesWithText("Artistas")[0]
-            .assertIsDisplayed()
-    }
-
-    /**
      * Verifica que el texto de carga de artistas esté visible
      */
     fun verifyArtistsLoadingTextIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
@@ -397,14 +339,6 @@ object CustomMatchers {
     }
 
     /**
-     * Verifica que el mensaje de error del detalle del artista esté visible
-     */
-    fun verifyArtistDetailErrorMessageIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Error al cargar el artista")
-            .assertIsDisplayed()
-    }
-
-    /**
      * Verifica que la descripción del artista esté visible
      */
     fun verifyArtistDescriptionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule, description: String): SemanticsNodeInteraction {
@@ -412,33 +346,7 @@ object CustomMatchers {
             .assert(hasText(description, substring = true))
     }
 
-    /**
-     * Verifica que la sección "Álbumes del Artista" esté visible
-     */
-    fun verifyArtistAlbumsSectionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        val nodes = composeTestRule.onAllNodesWithText("Álbumes del Artista")
-        nodes.fetchSemanticsNodes().isNotEmpty()
-        return nodes[0].assert(hasText("Álbumes del Artista"))
-    }
-
-    /**
-     * Verifica que la sección "Premios" esté visible
-     */
-    fun verifyPrizesSectionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        val nodes = composeTestRule.onAllNodesWithText("Premios")
-        nodes.fetchSemanticsNodes().isNotEmpty()
-        return nodes[0].assert(hasText("Premios"))
-    }
-
     // ===== Matchers para Collector List Screen =====
-
-    /**
-     * Verifica que el título "Coleccionistas" esté visible
-     */
-    fun verifyCollectorsTitleIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onAllNodesWithText("Coleccionistas")[0]
-            .assertIsDisplayed()
-    }
 
     /**
      * Verifica que el texto de carga de coleccionistas esté visible
@@ -490,29 +398,4 @@ object CustomMatchers {
             .assertIsNotDisplayed()
     }
 
-    /**
-     * Verifica que el mensaje de error del detalle del coleccionista esté visible
-     */
-    fun verifyCollectorDetailErrorMessageIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Error al cargar el coleccionista")
-            .assertIsDisplayed()
-    }
-
-    /**
-     * Verifica que la sección "Álbumes del Coleccionista" esté visible
-     */
-    fun verifyCollectorAlbumsSectionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        val nodes = composeTestRule.onAllNodesWithText("Álbumes del Coleccionista")
-        nodes.fetchSemanticsNodes().isNotEmpty()
-        return nodes[0].assert(hasText("Álbumes del Coleccionista"))
-    }
-
-    /**
-     * Verifica que la sección "Artistas Favoritos" esté visible
-     */
-    fun verifyFavoritePerformersSectionIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        val nodes = composeTestRule.onAllNodesWithText("Artistas Favoritos")
-        nodes.fetchSemanticsNodes().isNotEmpty()
-        return nodes[0].assert(hasText("Artistas Favoritos"))
-    }
 }

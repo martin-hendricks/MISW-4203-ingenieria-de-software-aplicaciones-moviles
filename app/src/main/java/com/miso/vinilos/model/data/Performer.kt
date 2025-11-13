@@ -22,24 +22,5 @@ data class Performer(
     @SerializedName("albums")
     val albums: List<Album>? = null
 ) {
-    /**
-     * Retorna la cantidad de álbumes del performer
-     */
-    fun getAlbumsCount(): Int {
-        return albums?.size ?: 0
-    }
 }
 
-/**
- * DTO para crear un nuevo performer
- */
-data class PerformerCreateDTO(
-    @SerializedName("name")
-    val name: String,
-    
-    @SerializedName("image")
-    val image: String,
-    
-    @SerializedName("description")
-    val description: String
-)

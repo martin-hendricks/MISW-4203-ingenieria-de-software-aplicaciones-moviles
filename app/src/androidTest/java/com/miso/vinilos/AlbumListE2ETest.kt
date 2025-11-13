@@ -114,7 +114,7 @@ class AlbumListE2ETest {
     @Test
     fun testLoadingStateDisplay() = runTest {
         // Arrange - Configurar respuesta con delay para simular carga lenta
-        val testAlbums = TestDataFactory.createTestAlbums()
+        TestDataFactory.createTestAlbums()
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createTimeoutResponse()
         )

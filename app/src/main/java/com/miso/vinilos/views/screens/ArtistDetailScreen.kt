@@ -1,4 +1,4 @@
-@file:Suppress("ConstantConditionIf")
+@file:Suppress("KotlinConstantConditions", "KotlinConstantConditions")
 
 package com.miso.vinilos.views.screens
 

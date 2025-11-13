@@ -16,11 +16,6 @@ object NetworkConstants {
      * Timeout para las peticiones en segundos
      */
     const val TIMEOUT_SECONDS = 30L
-    
-    /**
-     * Headers comunes
-     */
-    const val CONTENT_TYPE = "application/json"
-    const val ACCEPT = "application/json"
+
 }
 

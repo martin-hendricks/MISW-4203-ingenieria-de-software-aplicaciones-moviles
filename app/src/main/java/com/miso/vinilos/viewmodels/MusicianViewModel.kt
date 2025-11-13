@@ -145,14 +145,6 @@ class MusicianViewModel(
     }
 
     /**
-     * Reinicia el estado del detalle del músico
-     * Útil cuando se navega fuera de la pantalla de detalle
-     */
-    fun clearMusicianDetail() {
-        _musicianDetailState.value = MusicianDetailUiState.Loading
-    }
-
-    /**
      * Carga los premios asociados a un músico usando el servicio /prizes/{id}
      * Este método se llama cuando se necesita mostrar los premios del artista
      *

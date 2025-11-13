@@ -8,9 +8,6 @@ enum class UserRole(val displayName: String, val description: String) {
     COLLECTOR("Coleccionista", "Puede agregar y gestionar álbumes");
     
     companion object {
-        fun fromDisplayName(name: String): UserRole {
-            return UserRole.entries.find { it.displayName == name } ?: VISITOR
-        }
     }
 }
 

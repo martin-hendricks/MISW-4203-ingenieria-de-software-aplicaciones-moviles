@@ -49,16 +49,7 @@ interface AlbumApiService {
         @Path("id") id: Int,
         @Body album: AlbumCreateDTO
     ): Response<Album>
-    
-    /**
-     * Elimina un álbum
-     * DELETE /albums/{id}
-     * 
-     * @param id ID del álbum a eliminar
-     */
-    @DELETE("albums/{id}")
-    suspend fun deleteAlbum(@Path("id") id: Int): Response<Unit>
-    
+
     /**
      * Obtiene los tracks de un álbum específico
      * GET /albums/{albumId}/tracks

@@ -141,13 +141,6 @@ class CollectorRepository(
             }
         }
 
-        /**
-         * Resetea la instancia singleton (útil para testing)
-         */
-        @Synchronized
-        fun resetInstance() {
-            instance = null
-        }
     }
 }
 

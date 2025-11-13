@@ -146,32 +146,6 @@ object TestDataFactory {
             performers = null
         )
     }
-    
-    /**
-     * Crea un álbum con performers vacíos (para probar el caso "Artista desconocido")
-     */
-    fun createAlbumWithEmptyPerformers(): Album {
-        return createTestAlbum(
-            id = 7,
-            name = "Empty Performers Album",
-            cover = "https://example.com/empty.jpg",
-            description = "Álbum con lista vacía de performers",
-            performers = emptyList()
-        )
-    }
-    
-    /**
-     * Crea un álbum con un solo performer
-     */
-    fun createAlbumWithSinglePerformer(): Album {
-        return createTestAlbum(
-            id = 8,
-            name = "Solo Artist Album",
-            cover = "https://example.com/solo.jpg",
-            description = "Álbum de un solo artista",
-            performers = listOf(createTestPerformer(4, "Bob Dylan"))
-        )
-    }
 
     /**
      * Crea un comentario de prueba
@@ -260,9 +234,9 @@ object TestDataFactory {
             set(1940, Calendar.OCTOBER, 9)
         },
         albums: List<Album>? = null,
-        performerPrizes: List<com.miso.vinilos.model.data.PerformerPrize>? = null
-    ): com.miso.vinilos.model.data.Musician {
-        return com.miso.vinilos.model.data.Musician(
+        performerPrizes: List<PerformerPrize>? = null
+    ): Musician {
+        return Musician(
             id = id,
             name = name,
             image = image,
@@ -276,7 +250,7 @@ object TestDataFactory {
     /**
      * Crea una lista de músicos de prueba
      */
-    fun createTestMusicians(): List<com.miso.vinilos.model.data.Musician> {
+    fun createTestMusicians(): List<Musician> {
         val calendar1 = Calendar.getInstance().apply {
             set(1940, Calendar.OCTOBER, 9)
         }

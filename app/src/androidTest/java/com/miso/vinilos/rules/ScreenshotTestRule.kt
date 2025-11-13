@@ -145,7 +145,7 @@ class ScreenshotTestRule : TestWatcher() {
      * Guarda el bitmap en el almacenamiento del dispositivo
      */
     private fun saveBitmap(bitmap: Bitmap, filename: String) {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        InstrumentationRegistry.getInstrumentation().targetContext
         val screenshotsDir = getScreenshotsDirectory()
         
         if (!screenshotsDir.exists()) {
@@ -185,14 +185,7 @@ class ScreenshotTestRule : TestWatcher() {
             File(context.filesDir, "screenshots").apply { mkdirs() }
         }
     }
-    
-    /**
-     * Obtiene la ruta del directorio donde se guardan las screenshots
-     */
-    fun getScreenshotsDirectoryPath(): String {
-        return getScreenshotsDirectory().absolutePath
-    }
-    
+
     /**
      * Método público para tomar screenshots durante la ejecución del test
      * Ejemplo de uso: screenshotTestRule.takeScreenshot("step-1-inicio")
@@ -204,15 +197,5 @@ class ScreenshotTestRule : TestWatcher() {
             takeScreenshot(description, suffix)
         }
     }
-    
-    /**
-     * Método público para tomar screenshots con un nombre específico
-     * Ejemplo de uso: screenshotTestRule.takeScreenshotNamed("verificacion-datos")
-     */
-    fun takeScreenshotNamed(name: String) {
-        currentTestDescription?.let { description ->
-            val baseFilename = "${description.testClass.simpleName}-${description.methodName}"
-            captureScreenshot("$baseFilename-$name")
-        }
-    }
+
 }

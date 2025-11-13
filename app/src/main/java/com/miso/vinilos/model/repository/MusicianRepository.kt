@@ -122,13 +122,6 @@ class MusicianRepository(
             }
         }
 
-        /**
-         * Resetea la instancia singleton (útil para testing)
-         */
-        @Synchronized
-        fun resetInstance() {
-            instance = null
-        }
     }
 }
 

@@ -30,13 +30,7 @@ data class Musician(
     @SerializedName("performerPrizes")
     val performerPrizes: List<PerformerPrize>? = null
 ) {
-    /**
-     * Retorna la cantidad de álbumes del músico
-     */
-    fun getAlbumsCount(): Int {
-        return albums?.size ?: 0
-    }
-    
+
     /**
      * Retorna el año de nacimiento del músico
      */
