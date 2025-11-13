@@ -161,7 +161,7 @@ class CollectorViewModel(
      */
     fun loadAlbums(collectorAlbums: List<CollectorAlbum>) {
         viewModelScope.launch {
-            android.util.Log.d("CollectorViewModel", "loadAlbums: INICIO - Cargando ${collectorAlbums.size} álbumes")
+            android.util.Log.d("CollectorViewModel", "loadAlbums: INICIO - Cargando ${collectorAlbums.size}")
             
             // Log detallado de cada collectorAlbum para debug
             collectorAlbums.forEachIndexed { idx, ca ->

@@ -25,7 +25,7 @@ object CustomMatchers {
      * Verifica que el texto de carga esté visible
      */
     fun verifyLoadingTextIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Cargando álbumes...")
+        return composeTestRule.onNodeWithText("Cargando")
             .assertIsDisplayed()
     }
     
@@ -33,7 +33,7 @@ object CustomMatchers {
      * Verifica que el texto de carga no esté visible
      */
     fun verifyLoadingTextIsNotVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Cargando álbumes...")
+        return composeTestRule.onNodeWithText("Cargando")
             .assertIsNotDisplayed()
     }
     
@@ -153,7 +153,7 @@ object CustomMatchers {
      */
     fun verifyCircularProgressIndicatorIsVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
         // Buscar por el contentDescription del CircularProgressIndicator
-        return composeTestRule.onNodeWithText("Cargando álbumes...")
+        return composeTestRule.onNodeWithText("Cargando")
             .assertIsDisplayed()
     }
     
@@ -161,7 +161,7 @@ object CustomMatchers {
      * Verifica que el indicador de progreso circular no esté visible
      */
     fun verifyCircularProgressIndicatorIsNotVisible(composeTestRule: androidx.compose.ui.test.junit4.ComposeTestRule): SemanticsNodeInteraction {
-        return composeTestRule.onNodeWithText("Cargando álbumes...")
+        return composeTestRule.onNodeWithText("Cargando")
             .assertIsNotDisplayed()
     }
     

@@ -107,7 +107,7 @@ private fun LoadingState() {
         ) {
             CircularProgressIndicator()
             Text(
-                text = "Cargando álbumes...",
+                text = "Cargando",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.primary
             )
