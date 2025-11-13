@@ -10,20 +10,16 @@ import java.util.*
  * que coincidan con el esquema del backend
  */
 object TestDataFactory {
-    
+
     /**
-     * Crea un género de prueba
+     * Género de prueba por defecto
      */
-    fun createTestGenre(): Genre {
-        return Genre.ROCK
-    }
-    
+    val DEFAULT_GENRE = Genre.ROCK
+
     /**
-     * Crea una discográfica de prueba
+     * Discográfica de prueba por defecto
      */
-    fun createTestRecordLabel(): RecordLabel {
-        return RecordLabel.SONY
-    }
+    val DEFAULT_RECORD_LABEL = RecordLabel.SONY
     
     /**
      * Crea un performer de prueba
@@ -86,8 +82,8 @@ object TestDataFactory {
             cover = cover,
             releaseDate = calendar.time,
             description = description,
-            genre = createTestGenre(),
-            recordLabel = createTestRecordLabel(),
+            genre = DEFAULT_GENRE,
+            recordLabel = DEFAULT_RECORD_LABEL,
             tracks = tracks,
             performers = performers,
             comments = null
@@ -217,8 +213,8 @@ object TestDataFactory {
             cover = cover,
             releaseDate = calendar.time,
             description = description,
-            genre = createTestGenre(),
-            recordLabel = createTestRecordLabel(),
+            genre = DEFAULT_GENRE,
+            recordLabel = DEFAULT_RECORD_LABEL,
             tracks = createTestTracks(),
             performers = listOf(createTestPerformer(1, "The Beatles")),
             comments = createTestComments()
