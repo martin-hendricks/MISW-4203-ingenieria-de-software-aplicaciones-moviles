@@ -6,9 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.isDisplayed
 
 /**
  * Matchers personalizados para pruebas E2E con Compose

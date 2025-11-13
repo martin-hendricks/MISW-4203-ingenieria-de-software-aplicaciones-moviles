@@ -2,7 +2,6 @@ package com.miso.vinilos.rules
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -20,7 +19,7 @@ import java.util.concurrent.TimeUnit
  * IMPORTANTE: Las screenshots deben tomarse durante el test, NO automáticamente al final
  * porque la Activity puede estar siendo destruida cuando finished() se ejecuta.
  * 
- * Las screenshots se guardan en: /sdcard/Pictures/screenshots/ o /data/data/[package]/files/screenshots/
+ * Las screenshots se guardan en: /sdcard/Pictures/screenshots/ o /data/data/package/files/screenshots/
  */
 class ScreenshotTestRule : TestWatcher() {
     

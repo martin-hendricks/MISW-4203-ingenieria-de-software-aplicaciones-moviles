@@ -23,20 +23,20 @@ class CollectorRepository(
     suspend fun getCollectors(): Result<List<Collector>> {
         return try {
             val response = apiService.getCollectors()
-            android.util.Log.d("CollectorRepository", "getCollectors: Response code=${response.code()}, isSuccessful=${response.isSuccessful}")
+            Log.d("CollectorRepository", "getCollectors: Response code=${response.code()}, isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful && response.body() != null) {
                 val collectors = response.body()!!
                 // Log detallado de cada coleccionista para ver qué campos vienen
                 collectors.forEachIndexed { index, collector ->
-                    android.util.Log.d("CollectorRepository", "Collector[$index]: id=${collector.id}, name=${collector.name}, image=${collector.image}, email=${collector.email}, telephone=${collector.telephone}")
+                    Log.d("CollectorRepository", "Collector[$index]: id=${collector.id}, name=${collector.name}, image=${collector.image}, email=${collector.email}, telephone=${collector.telephone}")
                 }
                 Result.success(collectors)
             } else {
-                android.util.Log.e("CollectorRepository", "getCollectors: Error - code=${response.code()}, message=${response.message()}, body=${response.errorBody()?.string()}")
+               Log.e("CollectorRepository", "getCollectors: Error - code=${response.code()}, message=${response.message()}, body=${response.errorBody()?.string()}")
                 Result.failure(Exception("Error al obtener coleccionistas: ${response.code()}"))
             }
         } catch (e: Exception) {
-            android.util.Log.e("CollectorRepository", "getCollectors: Excepción", e)
+           Log.e("CollectorRepository", "getCollectors: Excepción", e)
             Result.failure(e)
         }
     }

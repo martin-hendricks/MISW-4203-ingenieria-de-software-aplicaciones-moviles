@@ -55,7 +55,7 @@ class CollectorListE2ETest {
         val testApiService = TestRetrofitClient.createTestCollectorApiService(mockWebServerRule.baseUrl)
         val testRepository = com.miso.vinilos.model.repository.CollectorRepository(testApiService)
         val testAlbumRepository = com.miso.vinilos.model.repository.AlbumRepository.getInstance()
-        return com.miso.vinilos.viewmodels.CollectorViewModel(testRepository, testAlbumRepository, Dispatchers.Unconfined)
+        return CollectorViewModel(testRepository, testAlbumRepository, Dispatchers.Unconfined)
     }
 
     /**

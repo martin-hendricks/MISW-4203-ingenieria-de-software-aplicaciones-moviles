@@ -20,7 +20,6 @@ import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

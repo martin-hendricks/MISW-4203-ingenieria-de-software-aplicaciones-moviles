@@ -3,7 +3,6 @@ package com.miso.vinilos.model.network
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.AlbumCreateDTO
 import com.miso.vinilos.model.data.Track
-import com.miso.vinilos.model.data.TrackCreateDTO
 import retrofit2.Response
 import retrofit2.http.*
 

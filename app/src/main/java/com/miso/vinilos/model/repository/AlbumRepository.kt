@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package com.miso.vinilos.model.repository
 
 import com.miso.vinilos.model.data.Album
@@ -87,25 +89,7 @@ class AlbumRepository(
             Result.failure(e)
         }
     }
-    
-    /**
-     * Elimina un álbum
-     * @param id ID del álbum a eliminar
-     * @return Result indicando éxito o error
-     */
-    suspend fun deleteAlbum(id: Int): Result<Unit> {
-        return try {
-            val response = apiService.deleteAlbum(id)
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Error al eliminar álbum: ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-    
+
     /**
      * Obtiene los tracks de un álbum
      * @param albumId ID del álbum
@@ -160,12 +144,5 @@ class AlbumRepository(
             }
         }
 
-        /**
-         * Resetea la instancia singleton (útil para testing)
-         */
-        @Synchronized
-        fun resetInstance() {
-            instance = null
-        }
     }
 }

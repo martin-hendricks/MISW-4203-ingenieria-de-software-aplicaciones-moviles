@@ -47,13 +47,6 @@ data class Album(
         calendar.time = releaseDate
         return calendar.get(Calendar.YEAR)
     }
-    
-    /**
-     * Retorna la cantidad de tracks del álbum
-     */
-    fun getTracksCount(): Int {
-        return tracks?.size ?: 0
-    }
 
 }
 

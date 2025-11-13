@@ -256,8 +256,8 @@ object TestDataFactory {
         name: String = "John Lennon",
         image: String = "https://example.com/john-lennon.jpg",
         description: String = "Músico y compositor británico",
-        birthDate: java.util.Calendar = java.util.Calendar.getInstance().apply {
-            set(1940, java.util.Calendar.OCTOBER, 9)
+        birthDate: Calendar = Calendar.getInstance().apply {
+            set(1940, Calendar.OCTOBER, 9)
         },
         albums: List<Album>? = null,
         performerPrizes: List<com.miso.vinilos.model.data.PerformerPrize>? = null
@@ -277,14 +277,14 @@ object TestDataFactory {
      * Crea una lista de músicos de prueba
      */
     fun createTestMusicians(): List<com.miso.vinilos.model.data.Musician> {
-        val calendar1 = java.util.Calendar.getInstance().apply {
-            set(1940, java.util.Calendar.OCTOBER, 9)
+        val calendar1 = Calendar.getInstance().apply {
+            set(1940, Calendar.OCTOBER, 9)
         }
-        val calendar2 = java.util.Calendar.getInstance().apply {
-            set(1942, java.util.Calendar.JUNE, 18)
+        val calendar2 = Calendar.getInstance().apply {
+            set(1942, Calendar.JUNE, 18)
         }
-        val calendar3 = java.util.Calendar.getInstance().apply {
-            set(1943, java.util.Calendar.JANUARY, 9)
+        val calendar3 = Calendar.getInstance().apply {
+            set(1943, Calendar.JANUARY, 9)
         }
         
         return listOf(
@@ -323,26 +323,26 @@ object TestDataFactory {
         name: String = "John Lennon",
         image: String = "https://example.com/john-lennon.jpg",
         description: String = "Músico y compositor británico, miembro de The Beatles"
-    ): com.miso.vinilos.model.data.Musician {
-        val calendar = java.util.Calendar.getInstance().apply {
-            set(1940, java.util.Calendar.OCTOBER, 9)
+    ): Musician {
+        val calendar = Calendar.getInstance().apply {
+            set(1940, Calendar.OCTOBER, 9)
         }
         
-        val prize = com.miso.vinilos.model.data.Prize(
+        val prize = Prize(
             id = 1,
             name = "Grammy Award",
             description = "Premio Grammy",
             organization = "Recording Academy"
         )
         
-        val performerPrize = com.miso.vinilos.model.data.PerformerPrize(
+        val performerPrize = PerformerPrize(
             id = 1,
             premiationDate = "1970-01-01",
             prize = prize,
             prizeId = 1
         )
         
-        return com.miso.vinilos.model.data.Musician(
+        return Musician(
             id = id,
             name = name,
             image = image,
@@ -367,9 +367,9 @@ object TestDataFactory {
         image: String? = "https://example.com/juan-perez.jpg",
         comments: List<Any>? = null,
         favoritePerformers: List<Performer>? = null,
-        collectorAlbums: List<com.miso.vinilos.model.data.CollectorAlbum>? = null
-    ): com.miso.vinilos.model.data.Collector {
-        return com.miso.vinilos.model.data.Collector(
+        collectorAlbums: List<CollectorAlbum>? = null
+    ): Collector {
+        return Collector(
             id = id,
             name = name,
             telephone = telephone,
@@ -384,7 +384,7 @@ object TestDataFactory {
     /**
      * Crea una lista de coleccionistas de prueba
      */
-    fun createTestCollectors(): List<com.miso.vinilos.model.data.Collector> {
+    fun createTestCollectors(): List<Collector> {
         return listOf(
             createTestCollector(
                 id = 1,
@@ -421,8 +421,8 @@ object TestDataFactory {
         name: String = "Juan Pérez",
         telephone: String = "+57 300 123 4567",
         email: String = "juan.perez@example.com"
-    ): com.miso.vinilos.model.data.Collector {
-        val collectorAlbum1 = com.miso.vinilos.model.data.CollectorAlbum(
+    ): Collector {
+        val collectorAlbum1 = CollectorAlbum(
             id = 1,
             price = 50000,
             status = "ACTIVE",
@@ -430,7 +430,7 @@ object TestDataFactory {
             albumId = 1
         )
         
-        val collectorAlbum2 = com.miso.vinilos.model.data.CollectorAlbum(
+        val collectorAlbum2 = CollectorAlbum(
             id = 2,
             price = 60000,
             status = "ACTIVE",
@@ -438,7 +438,7 @@ object TestDataFactory {
             albumId = 2
         )
         
-        return com.miso.vinilos.model.data.Collector(
+        return Collector(
             id = id,
             name = name,
             telephone = telephone,
