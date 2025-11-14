@@ -48,13 +48,13 @@ data class PrizeState(
  * ViewModel para gestionar el estado y la lógica de negocio de la lista de músicos
  * Sigue el patrón MVVM de Android Architecture Guidelines
  *
- * @param repository Repositorio de músicos (inyectable para testing)
- * @param prizeRepository Repositorio de premios (inyectable para testing)
+ * @param repository Repositorio de músicos (debe ser inyectado)
+ * @param prizeRepository Repositorio de premios (debe ser inyectado)
  * @param dispatcher Dispatcher de coroutines (inyectable para testing)
  */
 class MusicianViewModel(
-    private val repository: MusicianRepository = MusicianRepository.getInstance(),
-    private val prizeRepository: PrizeRepository = PrizeRepository.getInstance(),
+    private val repository: MusicianRepository,
+    private val prizeRepository: PrizeRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
     

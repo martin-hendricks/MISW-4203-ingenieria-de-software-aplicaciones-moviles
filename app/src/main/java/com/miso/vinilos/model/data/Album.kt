@@ -1,5 +1,7 @@
 package com.miso.vinilos.model.data
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import java.util.Calendar
 import java.util.Date
@@ -8,7 +10,9 @@ import java.util.Date
  * Entidad que representa un álbum musical
  * Corresponde a la entidad Album del backend
  */
+@Entity(tableName = "albums_table")
 data class Album(
+    @PrimaryKey
     @SerializedName("id")
     val id: Int,
     

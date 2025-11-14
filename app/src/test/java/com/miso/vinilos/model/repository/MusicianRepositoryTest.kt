@@ -1,9 +1,12 @@
 package com.miso.vinilos.model.repository
 
+import android.app.Application
 import com.miso.vinilos.model.data.Musician
 import com.miso.vinilos.model.data.MusicianCreateDTO
+import com.miso.vinilos.model.database.dao.MusiciansDao
 import com.miso.vinilos.model.network.MusicianApiService
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody
@@ -19,12 +22,22 @@ import java.util.Date
 class MusicianRepositoryTest {
 
     private lateinit var apiService: MusicianApiService
+    private lateinit var musiciansDao: MusiciansDao
+    private lateinit var application: Application
     private lateinit var repository: MusicianRepository
 
     @Before
     fun setup() {
+        // Mockear dependencias
         apiService = mockk()
-        repository = MusicianRepository(apiService)
+        musiciansDao = mockk(relaxed = true)
+        application = mockk(relaxed = true)
+
+        // Configurar comportamiento por defecto del DAO (retornar lista vacía para que se consulte la red)
+        every { musiciansDao.getMusicians() } returns emptyList()
+        coEvery { musiciansDao.getMusician(any()) } returns null
+
+        repository = MusicianRepository(application, musiciansDao, apiService)
     }
 
     @Test

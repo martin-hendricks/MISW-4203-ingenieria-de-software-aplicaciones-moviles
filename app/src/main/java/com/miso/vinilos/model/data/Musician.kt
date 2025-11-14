@@ -1,5 +1,7 @@
 package com.miso.vinilos.model.data
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import java.util.Date
 
@@ -8,7 +10,9 @@ import java.util.Date
  * Corresponde a la entidad Musician del backend que extiende Performer
  * Incluye todos los campos de Performer más birthDate
  */
+@Entity(tableName = "musicians_table")
 data class Musician(
+    @PrimaryKey
     @SerializedName("id")
     val id: Int,
     

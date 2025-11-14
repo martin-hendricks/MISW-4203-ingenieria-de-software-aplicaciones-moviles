@@ -1,12 +1,16 @@
 package com.miso.vinilos.model.data
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 
 /**
  * Entidad que representa un coleccionista
  * Corresponde a la entidad Collector del backend
  */
+@Entity(tableName = "collectors_table")
 data class Collector(
+    @PrimaryKey
     @SerializedName("id")
     val id: Int,
     

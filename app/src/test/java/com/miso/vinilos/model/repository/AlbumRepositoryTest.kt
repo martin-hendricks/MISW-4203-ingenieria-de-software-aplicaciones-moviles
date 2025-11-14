@@ -1,13 +1,16 @@
 package com.miso.vinilos.model.repository
 
+import android.app.Application
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.AlbumCreateDTO
 import com.miso.vinilos.model.data.Genre
 import com.miso.vinilos.model.data.RecordLabel
 import com.miso.vinilos.model.data.Track
+import com.miso.vinilos.model.database.dao.AlbumsDao
 import com.miso.vinilos.model.network.AlbumApiService
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.every
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
@@ -32,6 +35,8 @@ import java.util.Date
 class AlbumRepositoryTest {
 
     private lateinit var apiService: AlbumApiService
+    private lateinit var albumsDao: AlbumsDao
+    private lateinit var application: Application
     private lateinit var repository: AlbumRepository
     private lateinit var testDispatcher: TestDispatcher
 
@@ -56,8 +61,17 @@ class AlbumRepositoryTest {
         // Ahora podemos crear UnconfinedTestDispatcher porque Dispatchers.Main ya está configurado
         testDispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(testDispatcher)
+
+        // Mockear dependencias
         apiService = mockk()
-        repository = AlbumRepository(apiService)
+        albumsDao = mockk(relaxed = true)
+        application = mockk(relaxed = true)
+
+        // Configurar comportamiento por defecto del DAO (retornar lista vacía para que se consulte la red)
+        every { albumsDao.getAlbums() } returns emptyList()
+        coEvery { albumsDao.getAlbum(any()) } returns null
+
+        repository = AlbumRepository(application, albumsDao, apiService)
     }
 
     @After

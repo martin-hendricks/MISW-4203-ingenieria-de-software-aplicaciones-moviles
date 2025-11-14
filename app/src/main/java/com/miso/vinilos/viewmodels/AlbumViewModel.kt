@@ -35,11 +35,11 @@ sealed interface AlbumDetailUiState {
  * ViewModel para gestionar el estado y la lógica de negocio de la lista de álbumes
  * Sigue el patrón MVVM de Android Architecture Guidelines
  *
- * @param repository Repositorio de álbumes (inyectable para testing)
+ * @param repository Repositorio de álbumes (debe ser inyectado)
  * @param dispatcher Dispatcher de coroutines (inyectable para testing)
  */
 class AlbumViewModel(
-    private val repository: AlbumRepository = AlbumRepository.getInstance(),
+    private val repository: AlbumRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
     

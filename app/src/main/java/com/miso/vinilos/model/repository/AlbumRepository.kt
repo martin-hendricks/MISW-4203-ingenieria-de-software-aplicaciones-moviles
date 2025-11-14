@@ -2,54 +2,102 @@
 
 package com.miso.vinilos.model.repository
 
+import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.AlbumCreateDTO
 import com.miso.vinilos.model.data.Track
+import com.miso.vinilos.model.database.dao.AlbumsDao
 import com.miso.vinilos.model.network.AlbumApiService
 import com.miso.vinilos.model.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Repositorio para manejar las operaciones relacionadas con álbumes
  * Implementa el patrón Repository para separar la lógica de datos
+ * Incluye caché local con Room para mejorar el rendimiento
  *
+ * @param application Contexto de la aplicación para acceder a recursos del sistema
+ * @param albumsDao DAO para operaciones de caché local
  * @param apiService Servicio API para álbumes (inyectable para testing)
  */
 class AlbumRepository(
+    private val application: Application,
+    private val albumsDao: AlbumsDao,
     private val apiService: AlbumApiService = RetrofitClient.createService()
 ) {
-    
+
     /**
-     * Obtiene todos los álbumes
+     * Obtiene todos los álbumes usando estrategia cache-first
+     * Primero busca en caché local, si no hay datos consulta la red
      * @return Result con la lista de álbumes o error
      */
     suspend fun getAlbums(): Result<List<Album>> {
-        return try {
-            val response = apiService.getAlbums()
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+        // Intentar obtener datos del caché local (ejecutar en IO dispatcher)
+        val cached = withContext(Dispatchers.IO) {
+            albumsDao.getAlbums()
+        }
+
+        return if (cached.isNullOrEmpty()) {
+            // Si no hay caché, verificar conectividad
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_WIFI &&
+                cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_MOBILE) {
+                // Sin conexión, retornar lista vacía
+                Result.success(emptyList())
             } else {
-                Result.failure(Exception("Error al obtener álbumes: ${response.code()}"))
+                // Con conexión, obtener de la red y guardar en caché
+                try {
+                    val response = apiService.getAlbums()
+                    if (response.isSuccessful && response.body() != null) {
+                        val albums = response.body()!!
+                        // Guardar en caché para uso futuro
+                        albumsDao.insertAll(albums)
+                        Result.success(albums)
+                    } else {
+                        Result.failure(Exception("Error al obtener álbumes: ${response.code()}"))
+                    }
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
             }
-        } catch (e: Exception) {
-            Result.failure(e)
+        } else {
+            // Retornar datos del caché
+            Result.success(cached)
         }
     }
     
     /**
-     * Obtiene un álbum específico por ID
+     * Obtiene un álbum específico por ID usando estrategia cache-first
      * @param id ID del álbum
      * @return Result con el álbum o error
      */
     suspend fun getAlbum(id: Int): Result<Album> {
-        return try {
-            val response = apiService.getAlbum(id)
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception("Álbum no encontrado"))
+        // Intentar obtener del caché local (ejecutar en IO dispatcher)
+        val cached = withContext(Dispatchers.IO) {
+            albumsDao.getAlbum(id)
+        }
+
+        return if (cached != null) {
+            // Retornar del caché si existe
+            Result.success(cached)
+        } else {
+            // Si no está en caché, obtener de la red
+            try {
+                val response = apiService.getAlbum(id)
+                if (response.isSuccessful && response.body() != null) {
+                    val album = response.body()!!
+                    // Guardar en caché para uso futuro
+                    albumsDao.insert(album)
+                    Result.success(album)
+                } else {
+                    Result.failure(Exception("Álbum no encontrado"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
     
@@ -133,16 +181,21 @@ class AlbumRepository(
 
         /**
          * Obtiene la instancia singleton del repositorio
-         * Para testing, se puede pasar una instancia personalizada
+         * @param application Contexto de la aplicación
+         * @param albumsDao DAO de álbumes
+         * @param customInstance Instancia personalizada para testing
          */
-        fun getInstance(customInstance: AlbumRepository? = null): AlbumRepository {
+        fun getInstance(
+            application: Application,
+            albumsDao: AlbumsDao,
+            customInstance: AlbumRepository? = null
+        ): AlbumRepository {
             if (customInstance != null) {
                 return customInstance
             }
             return instance ?: synchronized(this) {
-                instance ?: AlbumRepository().also { instance = it }
+                instance ?: AlbumRepository(application, albumsDao).also { instance = it }
             }
         }
-
     }
 }
