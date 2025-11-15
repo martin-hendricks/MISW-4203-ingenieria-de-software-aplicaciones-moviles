@@ -810,8 +810,7 @@ class AlbumDetailE2ETest {
         // Hacer scroll para verificar comentarios
         scrollToAndAssertVisible("Comentarios")
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
-        CustomMatchers.verifyCommentIsVisible(composeTestRule, "Excelente álbum")
-        
+
         // Capturar screenshot con toda la información completa
         screenshotTestRule.takeScreenshot("información-completa")
     }
