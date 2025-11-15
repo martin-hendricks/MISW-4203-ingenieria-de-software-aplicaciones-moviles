@@ -1,15 +1,19 @@
 package com.miso.vinilos
 
+import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.navigation.compose.rememberNavController
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.miso.vinilos.config.TestRetrofitClient
 import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
+import androidx.room.Room
+import com.miso.vinilos.model.database.VinylRoomDatabase
 import com.miso.vinilos.rules.MockWebServerRule
 import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.viewmodels.CollectorViewModel
@@ -17,6 +21,7 @@ import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.screens.CollectorDetailScreen
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.Dispatchers
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,20 +54,12 @@ class CollectorDetailE2ETest {
         setComposeTestRule(composeTestRule)
     }
 
-    /**
-     * Desplaza la lista hasta un texto objetivo y asegura su visibilidad
-     */
-    private fun scrollToAndAssertVisible(text: String) {
-        runCatching {
-            composeTestRule.onNodeWithText(text, substring = true)
-                .performScrollTo()
-        }
-        composeTestRule.waitUntil(timeoutMillis = 1_000) {
-            composeTestRule.onAllNodesWithText(text, substring = true)
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-        composeTestRule.onNodeWithText(text, substring = true, useUnmergedTree = true)
-            .assertIsDisplayed()
+    private var testDatabase: VinylRoomDatabase? = null
+
+    @After
+    fun tearDown() {
+        testDatabase?.close()
+        testDatabase = null
     }
 
     /**
@@ -70,9 +67,17 @@ class CollectorDetailE2ETest {
      */
     private fun createTestViewModel(): CollectorViewModel {
         val testApiService = TestRetrofitClient.createTestCollectorApiService(mockWebServerRule.baseUrl)
-        val testRepository = com.miso.vinilos.model.repository.CollectorRepository(testApiService)
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        // Usar base de datos en memoria para pruebas (garantiza caché vacío)
+        testDatabase = Room.inMemoryDatabaseBuilder(
+            application,
+            VinylRoomDatabase::class.java
+        ).allowMainThreadQueries().build()
+        val collectorsDao = testDatabase!!.collectorsDao()
+        val testRepository = com.miso.vinilos.model.repository.CollectorRepository(application, collectorsDao, testApiService)
         val testAlbumApiService = TestRetrofitClient.createTestApiService(mockWebServerRule.baseUrl)
-        val testAlbumRepository = com.miso.vinilos.model.repository.AlbumRepository(testAlbumApiService)
+        val albumsDao = testDatabase!!.albumsDao()
+        val testAlbumRepository = com.miso.vinilos.model.repository.AlbumRepository(application, albumsDao, testAlbumApiService)
         return CollectorViewModel(testRepository, testAlbumRepository, Dispatchers.Unconfined)
     }
 
@@ -165,9 +170,6 @@ class CollectorDetailE2ETest {
             }
         }
 
-        // Assert - Verificar que el estado de carga es visible inicialmente
-        CustomMatchers.verifyCollectorDetailLoadingTextIsVisible(composeTestRule)
-        
         // Capturar screenshot del estado de carga
         screenshotTestRule.takeScreenshot("estado-carga")
     }

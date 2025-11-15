@@ -225,7 +225,7 @@ class CollectorViewModelTest {
         // Puede que solo se cargue uno a la vez, así que verificamos que al menos uno esté cargado
         assertTrue(albumsState.isNotEmpty())
         // Verificamos que los álbumes estén cargados (puede ser 1 o 2 dependiendo de la velocidad)
-        if (albumsState.size >= 1) {
+        if (albumsState.isNotEmpty()) {
             assertNotNull(albumsState[1] ?: albumsState[2])
         }
     }

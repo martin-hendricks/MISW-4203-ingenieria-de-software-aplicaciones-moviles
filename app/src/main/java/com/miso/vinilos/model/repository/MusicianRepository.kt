@@ -1,52 +1,100 @@
 package com.miso.vinilos.model.repository
 
+import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
 import com.miso.vinilos.model.data.Musician
 import com.miso.vinilos.model.data.MusicianCreateDTO
+import com.miso.vinilos.model.database.dao.MusiciansDao
 import com.miso.vinilos.model.network.MusicianApiService
 import com.miso.vinilos.model.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Repositorio para manejar las operaciones relacionadas con músicos
  * Implementa el patrón Repository para separar la lógica de datos
+ * Incluye caché local con Room para mejorar el rendimiento
  *
+ * @param application Contexto de la aplicación para acceder a recursos del sistema
+ * @param musiciansDao DAO para operaciones de caché local
  * @param apiService Servicio API para músicos (inyectable para testing)
  */
 class MusicianRepository(
+    private val application: Application,
+    private val musiciansDao: MusiciansDao,
     private val apiService: MusicianApiService = RetrofitClient.createService()
 ) {
-    
+
     /**
-     * Obtiene todos los músicos
+     * Obtiene todos los músicos usando estrategia cache-first
+     * Primero busca en caché local, si no hay datos consulta la red
      * @return Result con la lista de músicos o error
      */
     suspend fun getMusicians(): Result<List<Musician>> {
-        return try {
-            val response = apiService.getMusicians()
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+        // Intentar obtener datos del caché local (ejecutar en IO dispatcher)
+        val cached = withContext(Dispatchers.IO) {
+            musiciansDao.getMusicians()
+        }
+
+        return if (cached.isNullOrEmpty()) {
+            // Si no hay caché, verificar conectividad
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_WIFI &&
+                cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_MOBILE) {
+                // Sin conexión, retornar lista vacía
+                Result.success(emptyList())
             } else {
-                Result.failure(Exception("Error al obtener músicos: ${response.code()}"))
+                // Con conexión, obtener de la red
+                try {
+                    val response = apiService.getMusicians()
+                    if (response.isSuccessful && response.body() != null) {
+                        val musicians = response.body()!!
+                        // Guardar en caché para uso futuro
+                        musiciansDao.insertAll(musicians)
+                        Result.success(musicians)
+                    } else {
+                        Result.failure(Exception("Error al obtener músicos: ${response.code()}"))
+                    }
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
             }
-        } catch (e: Exception) {
-            Result.failure(e)
+        } else {
+            // Retornar datos del caché
+            Result.success(cached)
         }
     }
-    
+
     /**
-     * Obtiene un músico específico por ID
+     * Obtiene un músico específico por ID usando estrategia cache-first
      * @param id ID del músico
      * @return Result con el músico o error
      */
     suspend fun getMusician(id: Int): Result<Musician> {
-        return try {
-            val response = apiService.getMusician(id)
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception("Músico no encontrado"))
+        // Intentar obtener del caché local (ejecutar en IO dispatcher)
+        val cached = withContext(Dispatchers.IO) {
+            musiciansDao.getMusician(id)
+        }
+
+        return if (cached != null) {
+            // Retornar del caché si existe
+            Result.success(cached)
+        } else {
+            // Si no está en caché, obtener de la red
+            try {
+                val response = apiService.getMusician(id)
+                if (response.isSuccessful && response.body() != null) {
+                    val musician = response.body()!!
+                    // Guardar en caché para uso futuro
+                    musiciansDao.insert(musician)
+                    Result.success(musician)
+                } else {
+                    Result.failure(Exception("Músico no encontrado"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
     
@@ -111,23 +159,21 @@ class MusicianRepository(
 
         /**
          * Obtiene la instancia singleton del repositorio
-         * Para testing, se puede pasar una instancia personalizada
+         * @param application Contexto de la aplicación
+         * @param musiciansDao DAO de músicos
+         * @param customInstance Instancia personalizada para testing
          */
-        fun getInstance(customInstance: MusicianRepository? = null): MusicianRepository {
+        fun getInstance(
+            application: Application,
+            musiciansDao: MusiciansDao,
+            customInstance: MusicianRepository? = null
+        ): MusicianRepository {
             if (customInstance != null) {
                 return customInstance
             }
             return instance ?: synchronized(this) {
-                instance ?: MusicianRepository().also { instance = it }
+                instance ?: MusicianRepository(application, musiciansDao).also { instance = it }
             }
-        }
-
-        /**
-         * Resetea la instancia singleton (útil para testing)
-         */
-        @Synchronized
-        fun resetInstance() {
-            instance = null
         }
     }
 }

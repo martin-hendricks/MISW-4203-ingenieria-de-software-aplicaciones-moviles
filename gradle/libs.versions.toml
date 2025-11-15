@@ -46,9 +46,6 @@ testRunner = "1.6.2"
 testCore = "1.6.2"
 coroutinesTest = "1.9.0"
 
-# Compose Compiler
-composeCompiler = "1.5.15"
-
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

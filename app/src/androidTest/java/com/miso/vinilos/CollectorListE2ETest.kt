@@ -1,19 +1,24 @@
 package com.miso.vinilos
 
+import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.miso.vinilos.config.TestRetrofitClient
 import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
+import androidx.room.Room
+import com.miso.vinilos.model.database.VinylRoomDatabase
 import com.miso.vinilos.rules.MockWebServerRule
 import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,14 +53,31 @@ class CollectorListE2ETest {
         setComposeTestRule(composeTestRule)
     }
 
+    private var testDatabase: VinylRoomDatabase? = null
+
+    @After
+    fun tearDown() {
+        testDatabase?.close()
+        testDatabase = null
+    }
+
     /**
      * Helper function to create a test ViewModel with MockWebServer
      */
     private fun createTestViewModel(): CollectorViewModel {
         val testApiService = TestRetrofitClient.createTestCollectorApiService(mockWebServerRule.baseUrl)
-        val testRepository = com.miso.vinilos.model.repository.CollectorRepository(testApiService)
-        val testAlbumRepository = com.miso.vinilos.model.repository.AlbumRepository.getInstance()
-        return com.miso.vinilos.viewmodels.CollectorViewModel(testRepository, testAlbumRepository, Dispatchers.Unconfined)
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        // Usar base de datos en memoria para pruebas (garantiza caché vacío)
+        testDatabase = Room.inMemoryDatabaseBuilder(
+            application,
+            VinylRoomDatabase::class.java
+        ).allowMainThreadQueries().build()
+        val collectorsDao = testDatabase!!.collectorsDao()
+        val testRepository = com.miso.vinilos.model.repository.CollectorRepository(application, collectorsDao, testApiService)
+        val albumsDao = testDatabase!!.albumsDao()
+        val testAlbumApiService = TestRetrofitClient.createTestApiService(mockWebServerRule.baseUrl)
+        val testAlbumRepository = com.miso.vinilos.model.repository.AlbumRepository(application, albumsDao, testAlbumApiService)
+        return CollectorViewModel(testRepository, testAlbumRepository, Dispatchers.Unconfined)
     }
 
     /**
@@ -131,7 +153,6 @@ class CollectorListE2ETest {
     @Test
     fun testLoadingStateDisplay() = runTest {
         // Arrange - Configurar respuesta con delay para simular carga lenta
-        val testCollectors = TestDataFactory.createTestCollectors()
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createTimeoutResponse()
         )

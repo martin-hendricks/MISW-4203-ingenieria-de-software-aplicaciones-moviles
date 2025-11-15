@@ -9,11 +9,15 @@ import com.miso.vinilos.model.repository.MusicianRepository
 import com.miso.vinilos.model.repository.PrizeRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 /**
  * Estado de la UI para la lista de músicos
@@ -22,7 +26,8 @@ import kotlinx.coroutines.withContext
 sealed interface MusicianUiState {
     object Loading : MusicianUiState
     data class Success(val musicians: List<Musician>) : MusicianUiState
-    data class Error(val message: String) : MusicianUiState
+    data class Error(val message: String, val canRetry: Boolean = true) : MusicianUiState
+    object Empty : MusicianUiState
 }
 
 /**
@@ -32,7 +37,7 @@ sealed interface MusicianUiState {
 sealed interface MusicianDetailUiState {
     object Loading : MusicianDetailUiState
     data class Success(val musician: Musician) : MusicianDetailUiState
-    data class Error(val message: String) : MusicianDetailUiState
+    data class Error(val message: String, val canRetry: Boolean = true) : MusicianDetailUiState
 }
 
 /**
@@ -47,17 +52,24 @@ data class PrizeState(
 /**
  * ViewModel para gestionar el estado y la lógica de negocio de la lista de músicos
  * Sigue el patrón MVVM de Android Architecture Guidelines
+ * Incluye carga paralela de premios para optimizar el rendimiento
  *
- * @param repository Repositorio de músicos (inyectable para testing)
- * @param prizeRepository Repositorio de premios (inyectable para testing)
+ * @param repository Repositorio de músicos (debe ser inyectado)
+ * @param prizeRepository Repositorio de premios (debe ser inyectado)
  * @param dispatcher Dispatcher de coroutines (inyectable para testing)
  */
 class MusicianViewModel(
-    private val repository: MusicianRepository = MusicianRepository.getInstance(),
-    private val prizeRepository: PrizeRepository = PrizeRepository.getInstance(),
+    private val repository: MusicianRepository,
+    private val prizeRepository: PrizeRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
     
+    companion object {
+        private const val NETWORK_TIMEOUT_MS = 30_000L // 30 segundos
+        private const val MAX_RETRY_ATTEMPTS = 3
+        private const val RETRY_DELAY_MS = 1000L // 1 segundo
+    }
+
     /**
      * Estado actual de la UI, inicializado en Loading
      */
@@ -77,31 +89,76 @@ class MusicianViewModel(
     val prizesState: StateFlow<Map<Int, PrizeState>> = _prizesState.asStateFlow()
     
     /**
-     * Carga la lista de músicos desde el repositorio
+     * Carga la lista de músicos desde el repositorio con retry automático
      * Este método inicia automáticamente la carga al crear el ViewModel
+     *
+     * @param retryCount Número de intentos de reintento (para uso interno)
      */
-    fun loadMusicians() {
+    fun loadMusicians(retryCount: Int = 0) {
         viewModelScope.launch(dispatcher) {
             _uiState.value = MusicianUiState.Loading
 
-            repository.getMusicians()
-                .onSuccess { musicians ->
-                    _uiState.value = MusicianUiState.Success(musicians)
+            try {
+                withTimeout(NETWORK_TIMEOUT_MS) {
+                    repository.getMusicians()
+                        .onSuccess { musicians ->
+                            if (musicians.isEmpty()) {
+                                _uiState.value = MusicianUiState.Empty
+                            } else {
+                                _uiState.value = MusicianUiState.Success(musicians)
+                            }
+                        }
+                        .onFailure { exception ->
+                            handleLoadError(exception, retryCount)
+                        }
                 }
-                .onFailure { exception ->
-                    val errorMessage = when {
-                        exception.message?.contains("Unable to resolve host") == true ->
-                            "No se puede conectar al servidor. Verifica que el backend esté corriendo en localhost:3000"
-                        exception.message?.contains("Failed to connect") == true ->
-                            "Error de conexión. Verifica tu conexión de red"
-                        exception.message?.contains("timeout") == true ->
-                            "Tiempo de espera agotado. El servidor no responde"
-                        else ->
-                            "Error: ${exception.message ?: "Error desconocido al cargar músicos"}"
-                    }
-                    _uiState.value = MusicianUiState.Error(errorMessage)
+            } catch (e: TimeoutCancellationException) {
+                if (retryCount < MAX_RETRY_ATTEMPTS) {
+                    delay(RETRY_DELAY_MS)
+                    loadMusicians(retryCount + 1)
+                } else {
+                    _uiState.value = MusicianUiState.Error(
+                        "Tiempo de espera agotado después de $MAX_RETRY_ATTEMPTS intentos",
+                        canRetry = true
+                    )
                 }
+            }
         }
+    }
+
+    /**
+     * Maneja los errores durante la carga de músicos
+     */
+    private suspend fun handleLoadError(exception: Throwable, retryCount: Int) {
+        val shouldRetry = retryCount < MAX_RETRY_ATTEMPTS && isRetryableError(exception)
+
+        if (shouldRetry) {
+            delay(RETRY_DELAY_MS * (retryCount + 1))
+            loadMusicians(retryCount + 1)
+        } else {
+            val errorMessage = when {
+                exception.message?.contains("Unable to resolve host") == true ->
+                    "No se puede conectar al servidor"
+                exception.message?.contains("Failed to connect") == true ->
+                    "Error de conexión. Verifica tu conexión de red"
+                exception.message?.contains("timeout") == true ->
+                    "Tiempo de espera agotado"
+                retryCount >= MAX_RETRY_ATTEMPTS ->
+                    "Error después de $MAX_RETRY_ATTEMPTS intentos: ${exception.message}"
+                else ->
+                    "Error: ${exception.message ?: "Error desconocido al cargar músicos"}"
+            }
+            _uiState.value = MusicianUiState.Error(errorMessage, canRetry = true)
+        }
+    }
+
+    /**
+     * Determina si un error es recuperable mediante retry
+     */
+    private fun isRetryableError(exception: Throwable): Boolean {
+        return exception.message?.contains("timeout") == true ||
+               exception.message?.contains("Failed to connect") == true ||
+               exception.message?.contains("SocketTimeoutException") == true
     }
     
     /**
@@ -145,103 +202,93 @@ class MusicianViewModel(
     }
 
     /**
-     * Reinicia el estado del detalle del músico
-     * Útil cuando se navega fuera de la pantalla de detalle
-     */
-    fun clearMusicianDetail() {
-        _musicianDetailState.value = MusicianDetailUiState.Loading
-    }
-
-    /**
      * Carga los premios asociados a un músico usando el servicio /prizes/{id}
+     * Optimizado para cargar todos los premios en paralelo
      * Este método se llama cuando se necesita mostrar los premios del artista
      *
      * @param performerPrizes Lista de performerPrizes del músico
      */
     fun loadPrizes(performerPrizes: List<PerformerPrize>) {
-        viewModelScope.launch {
-            android.util.Log.d("MusicianViewModel", "loadPrizes: INICIO - Cargando ${performerPrizes.size} premios")
-            
-            // Log detallado de cada performerPrize para debug
-            performerPrizes.forEachIndexed { idx, pp ->
-                android.util.Log.d("MusicianViewModel", "loadPrizes: performerPrize[$idx]: id=${pp.id}, prizeId=${pp.prizeId}, prize=${pp.prize}, prize?.id=${pp.prize?.id}, premiationDate=${pp.premiationDate}")
-                // Log del objeto prize completo si existe
-                if (pp.prize != null) {
-                    android.util.Log.d("MusicianViewModel", "loadPrizes: performerPrize[$idx].prize completo: id=${pp.prize.id}, name=${pp.prize.name}")
-                } else {
-                    android.util.Log.w("MusicianViewModel", "loadPrizes: performerPrize[$idx].prize es NULL")
-                }
+        viewModelScope.launch(dispatcher) {
+            android.util.Log.d("MusicianViewModel", "loadPrizes: INICIO - Cargando ${performerPrizes.size} premios en PARALELO")
+
+            if (performerPrizes.isEmpty()) {
+                android.util.Log.d("MusicianViewModel", "loadPrizes: No hay premios para cargar")
+                return@launch
             }
             
-            // Siempre cargar desde el servicio /prizes/{id} para asegurar datos completos
-            performerPrizes.forEach { performerPrize ->
-                android.util.Log.d("MusicianViewModel", "loadPrizes: Procesando performerPrize id=${performerPrize.id}, prizeId=${performerPrize.prizeId}, prize.id=${performerPrize.prize?.id}, prize=${performerPrize.prize}")
-                
-                // Obtener el ID del premio (puede venir en prize.id, prizeId, o el id del performerPrize podría ser el prizeId)
-                // Intentar diferentes formas de obtener el prizeId
-                val prizeId = performerPrize.prize?.id 
-                    ?: performerPrize.prizeId
-                    ?: performerPrize.id // Posiblemente el id del performerPrize es el mismo que el prizeId
-                    ?: run {
-                        android.util.Log.w("MusicianViewModel", "loadPrizes: ❌ No se pudo obtener prizeId del performerPrize id=${performerPrize.id}, prize=${performerPrize.prize}, prizeId=${performerPrize.prizeId}")
-                        return@forEach
+            try {
+                // Cargar todos los premios en paralelo usando async
+                withTimeout(NETWORK_TIMEOUT_MS) {
+                    val prizeJobs = performerPrizes.mapNotNull { performerPrize ->
+                        // Obtener el ID del premio
+                        val prizeId = performerPrize.prize?.id
+                            ?: performerPrize.prizeId
+                            ?: performerPrize.id
+                            ?: run {
+                                android.util.Log.w("MusicianViewModel", "loadPrizes: No se pudo obtener prizeId")
+                                return@mapNotNull null
+                            }
+
+                        // Verificar si ya está cargado
+                        val existingState = _prizesState.value[prizeId]
+                        if (existingState?.prize != null) {
+                            android.util.Log.d("MusicianViewModel", "loadPrizes: Premio $prizeId ya cargado")
+                            return@mapNotNull null
+                        }
+
+                        // Marcar como cargando
+                        val loadingMap = HashMap(_prizesState.value)
+                        loadingMap[prizeId] = PrizeState(isLoading = true)
+                        _prizesState.value = loadingMap
+
+                        // Crear tarea asíncrona para cargar el premio
+                        async(Dispatchers.IO) {
+                            android.util.Log.d("MusicianViewModel", "async: Premio $prizeId ejecutándose en thread=${Thread.currentThread().name}")
+                            delay(3000) // TEMPORAL: delay para visualizar en Profiler
+                            val result = prizeRepository.getPrize(prizeId)
+                            android.util.Log.d("MusicianViewModel", "async: Premio $prizeId completado en thread=${Thread.currentThread().name}")
+                            prizeId to result
+                        }
                     }
-                
-                android.util.Log.d("MusicianViewModel", "loadPrizes: prizeId obtenido: $prizeId (de prize.id=${performerPrize.prize?.id}, prizeId=${performerPrize.prizeId}, performerPrize.id=${performerPrize.id})")
-                
-                android.util.Log.d("MusicianViewModel", "loadPrizes: ✅ prizeId=$prizeId obtenido correctamente")
-                
-                // Verificar si ya está cargado para evitar cargas duplicadas
-                val existingState = _prizesState.value[prizeId]
-                if (existingState?.prize != null) {
-                    android.util.Log.d("MusicianViewModel", "loadPrizes: Premio $prizeId ya está cargado, omitiendo")
-                    return@forEach
-                }
-                
-                // Marcar como cargando - crear una nueva instancia del Map para forzar emisión
-                android.util.Log.d("MusicianViewModel", "loadPrizes: Marcando prizeId=$prizeId como loading")
-                val loadingMap = HashMap(_prizesState.value)
-                loadingMap[prizeId] = PrizeState(isLoading = true)
-                _prizesState.value = loadingMap
-                
-                // Cargar el premio desde el servicio /prizes/{id}
-                android.util.Log.d("MusicianViewModel", "loadPrizes: Llamando a prizeRepository.getPrize($prizeId)")
-                val result = withContext(Dispatchers.IO) {
-                    prizeRepository.getPrize(prizeId)
-                }
-                
-                result.onSuccess { prize ->
-                    android.util.Log.d("MusicianViewModel", "loadPrizes: ✅ Premio $prizeId cargado exitosamente: ${prize.name}")
-                    
-                    // Actualizar el estado - crear una nueva instancia del Map para forzar emisión
-                    val successMap = HashMap(_prizesState.value)
-                    successMap[prizeId] = PrizeState(prize = prize, isLoading = false)
-                    _prizesState.value = successMap
-                    android.util.Log.d("MusicianViewModel", "loadPrizes: Estado actualizado para $prizeId, total premios: ${_prizesState.value.size}")
-                }.onFailure { exception ->
-                    android.util.Log.e("MusicianViewModel", "loadPrizes: ❌ Error cargando premio $prizeId", exception)
-                    val errorMessage = when {
-                        exception.message?.contains("Unable to resolve host") == true ->
-                            "No se puede conectar al servidor"
-                        exception.message?.contains("Failed to connect") == true ->
-                            "Error de conexión"
-                        exception.message?.contains("timeout") == true ->
-                            "Tiempo de espera agotado"
-                        exception.message?.contains("no encontrado") == true ->
-                            "Premio no encontrado"
-                        else ->
-                            exception.message ?: "Error desconocido al cargar el premio"
+
+                    // Esperar a que se completen todas las cargas en paralelo
+                    val results = prizeJobs.awaitAll()
+
+                    // Procesar los resultados
+                    val updatedMap = HashMap(_prizesState.value)
+                    results.forEach { (prizeId, result) ->
+                        result.onSuccess { prize ->
+                            android.util.Log.d("MusicianViewModel", "loadPrizes: ✅ Premio $prizeId cargado: ${prize.name}")
+                            updatedMap[prizeId] = PrizeState(prize = prize, isLoading = false)
+                        }.onFailure { exception ->
+                            android.util.Log.e("MusicianViewModel", "loadPrizes: ❌ Error premio $prizeId", exception)
+                            val errorMessage = when {
+                                exception.message?.contains("Unable to resolve host") == true -> "Sin conexión"
+                                exception.message?.contains("Failed to connect") == true -> "Error de conexión"
+                                exception.message?.contains("timeout") == true -> "Tiempo agotado"
+                                else -> exception.message ?: "Error desconocido"
+                            }
+                            updatedMap[prizeId] = PrizeState(isLoading = false, error = errorMessage)
+                        }
                     }
                     
-                    // Actualizar el estado de error - crear una nueva instancia del Map
-                    val errorMap = HashMap(_prizesState.value)
-                    errorMap[prizeId] = PrizeState(isLoading = false, error = errorMessage)
-                    _prizesState.value = errorMap
-                    android.util.Log.e("MusicianViewModel", "loadPrizes: Estado de error actualizado para $prizeId")
+                    // Actualizar el estado una sola vez con todos los resultados
+                    _prizesState.value = updatedMap
+                    android.util.Log.d("MusicianViewModel", "loadPrizes: FIN - ${updatedMap.size} premios procesados")
                 }
+            } catch (e: TimeoutCancellationException) {
+                android.util.Log.e("MusicianViewModel", "loadPrizes: Timeout al cargar premios", e)
+                // Marcar todos como error por timeout
+                val errorMap = HashMap(_prizesState.value)
+                performerPrizes.forEach { performerPrize ->
+                    val prizeId = performerPrize.prize?.id ?: performerPrize.prizeId ?: performerPrize.id
+                    prizeId?.let {
+                        errorMap[it] = PrizeState(isLoading = false, error = "Tiempo agotado")
+                    }
+                }
+                _prizesState.value = errorMap
             }
-            
-            android.util.Log.d("MusicianViewModel", "loadPrizes: FIN - Estado final: ${_prizesState.value.size} premios, keys: ${_prizesState.value.keys}")
         }
     }
     

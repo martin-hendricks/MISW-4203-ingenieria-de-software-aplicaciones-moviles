@@ -1,9 +1,10 @@
+@file:Suppress("KotlinConstantConditions", "KotlinConstantConditions")
+
 package com.miso.vinilos.views.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +41,6 @@ import com.miso.vinilos.viewmodels.PrizeState
 import com.miso.vinilos.views.theme.LightGreen
 import com.miso.vinilos.views.theme.MidGreen
 import com.miso.vinilos.views.theme.Yellow
-import androidx.compose.runtime.*
 import java.text.SimpleDateFormat
 import java.util.Locale
 

@@ -52,7 +52,16 @@ fun ArtistListScreen(
         is MusicianUiState.Error -> {
             ErrorState(
                 message = currentState.message,
-                onRetry = { musicianViewModel.refreshMusicians() }
+                onRetry = if (currentState.canRetry) {
+                    { musicianViewModel.loadMusicians() }
+                } else {
+                    { musicianViewModel.refreshMusicians() }
+                }
+            )
+        }
+        is MusicianUiState.Empty -> {
+            EmptyState(
+                message = "No hay artistas disponibles"
             )
         }
     }
@@ -149,6 +158,38 @@ private fun ErrorState(
             Button(onClick = onRetry) {
                 Text("Reintentar")
             }
+        }
+    }
+}
+
+/**
+ * Componente que muestra el estado vacío cuando no hay artistas
+ *
+ * @param message Mensaje a mostrar
+ */
+@Composable
+private fun EmptyState(
+    message: String
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "Aún no se han agregado artistas",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

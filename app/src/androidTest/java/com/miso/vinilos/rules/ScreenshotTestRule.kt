@@ -2,7 +2,6 @@ package com.miso.vinilos.rules
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -20,7 +19,7 @@ import java.util.concurrent.TimeUnit
  * IMPORTANTE: Las screenshots deben tomarse durante el test, NO automáticamente al final
  * porque la Activity puede estar siendo destruida cuando finished() se ejecuta.
  * 
- * Las screenshots se guardan en: /sdcard/Pictures/screenshots/ o /data/data/[package]/files/screenshots/
+ * Las screenshots se guardan en: /sdcard/Pictures/screenshots/ o /data/data/package/files/screenshots/
  */
 class ScreenshotTestRule : TestWatcher() {
     
@@ -146,7 +145,7 @@ class ScreenshotTestRule : TestWatcher() {
      * Guarda el bitmap en el almacenamiento del dispositivo
      */
     private fun saveBitmap(bitmap: Bitmap, filename: String) {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        InstrumentationRegistry.getInstrumentation().targetContext
         val screenshotsDir = getScreenshotsDirectory()
         
         if (!screenshotsDir.exists()) {
@@ -186,14 +185,7 @@ class ScreenshotTestRule : TestWatcher() {
             File(context.filesDir, "screenshots").apply { mkdirs() }
         }
     }
-    
-    /**
-     * Obtiene la ruta del directorio donde se guardan las screenshots
-     */
-    fun getScreenshotsDirectoryPath(): String {
-        return getScreenshotsDirectory().absolutePath
-    }
-    
+
     /**
      * Método público para tomar screenshots durante la ejecución del test
      * Ejemplo de uso: screenshotTestRule.takeScreenshot("step-1-inicio")
@@ -205,15 +197,5 @@ class ScreenshotTestRule : TestWatcher() {
             takeScreenshot(description, suffix)
         }
     }
-    
-    /**
-     * Método público para tomar screenshots con un nombre específico
-     * Ejemplo de uso: screenshotTestRule.takeScreenshotNamed("verificacion-datos")
-     */
-    fun takeScreenshotNamed(name: String) {
-        currentTestDescription?.let { description ->
-            val baseFilename = "${description.testClass.simpleName}-${description.methodName}"
-            captureScreenshot("$baseFilename-$name")
-        }
-    }
+
 }

@@ -48,12 +48,13 @@ data class AlbumState(
  * ViewModel para gestionar el estado y la lógica de negocio de la lista de coleccionistas
  * Sigue el patrón MVVM de Android Architecture Guidelines
  *
- * @param repository Repositorio de coleccionistas (inyectable para testing)
+ * @param repository Repositorio de coleccionistas (debe ser inyectado)
+ * @param albumRepository Repositorio de álbumes (debe ser inyectado)
  * @param dispatcher Dispatcher de coroutines (inyectable para testing)
  */
 class CollectorViewModel(
-    private val repository: CollectorRepository = CollectorRepository.getInstance(),
-    private val albumRepository: AlbumRepository = AlbumRepository.getInstance(),
+    private val repository: CollectorRepository,
+    private val albumRepository: AlbumRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
     
@@ -161,7 +162,7 @@ class CollectorViewModel(
      */
     fun loadAlbums(collectorAlbums: List<CollectorAlbum>) {
         viewModelScope.launch {
-            android.util.Log.d("CollectorViewModel", "loadAlbums: INICIO - Cargando ${collectorAlbums.size} álbumes")
+            android.util.Log.d("CollectorViewModel", "loadAlbums: INICIO - Cargando ${collectorAlbums.size}")
             
             // Log detallado de cada collectorAlbum para debug
             collectorAlbums.forEachIndexed { idx, ca ->

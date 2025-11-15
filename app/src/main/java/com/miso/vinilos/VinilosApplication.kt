@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import com.miso.vinilos.model.database.VinylRoomDatabase
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
@@ -12,13 +13,17 @@ import java.util.concurrent.TimeUnit
  * Application class para configurar componentes globales de la app
  */
 class VinilosApplication : Application(), ImageLoaderFactory {
-    
-    private val TAG = "VinilosApplication"
-    
-    override fun onCreate() {
-        super.onCreate()
+
+    companion object {
+        private const val TAG = "VinilosApplication"
     }
-    
+
+    /**
+     * Instancia lazy de la base de datos Room
+     * Se inicializa solo cuando se accede por primera vez
+     */
+    val database by lazy { VinylRoomDatabase.getDatabase(this) }
+
     /**
      * Configura el ImageLoader de Coil con soporte mejorado para PNG y otros formatos
      * Coil 2.7.0 ya incluye soporte para PNG, JPG, GIF, WebP, etc. por defecto

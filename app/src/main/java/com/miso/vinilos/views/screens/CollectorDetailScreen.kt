@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.miso.vinilos.model.data.Collector
+import java.util.Locale
 import com.miso.vinilos.model.data.CollectorAlbum
 import com.miso.vinilos.model.data.Performer
 import com.miso.vinilos.model.network.NetworkConstants
@@ -520,7 +521,7 @@ private fun AlbumCardError(
  * Formatea el precio con separadores de miles
  */
 private fun Int.formatPrice(): String {
-    return String.format("%,d", this)
+    return String.format(Locale.US, "%,d", this)
 }
 
 /**

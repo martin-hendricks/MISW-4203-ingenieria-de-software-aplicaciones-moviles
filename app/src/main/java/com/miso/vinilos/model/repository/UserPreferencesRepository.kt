@@ -26,7 +26,7 @@ class UserPreferencesRepository(private val context: Context) {
         
         fun getInstance(context: Context): UserPreferencesRepository {
             return instance ?: synchronized(this) {
-                instance ?: UserPreferencesRepository(context).also { instance = it }
+                instance ?: UserPreferencesRepository(context.applicationContext).also { instance = it }
             }
         }
     }
