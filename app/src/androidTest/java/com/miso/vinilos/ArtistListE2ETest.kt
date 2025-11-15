@@ -1,19 +1,24 @@
 package com.miso.vinilos
 
+import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.miso.vinilos.config.TestRetrofitClient
 import com.miso.vinilos.helpers.JsonResponseHelper
 import com.miso.vinilos.helpers.TestDataFactory
 import com.miso.vinilos.matchers.CustomMatchers
+import androidx.room.Room
+import com.miso.vinilos.model.database.VinylRoomDatabase
 import com.miso.vinilos.rules.MockWebServerRule
 import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,12 +53,27 @@ class ArtistListE2ETest {
         setComposeTestRule(composeTestRule)
     }
 
+    private var testDatabase: VinylRoomDatabase? = null
+
+    @After
+    fun tearDown() {
+        testDatabase?.close()
+        testDatabase = null
+    }
+
     /**
      * Helper function to create a test ViewModel with MockWebServer
      */
     private fun createTestViewModel(): MusicianViewModel {
         val testApiService = TestRetrofitClient.createTestMusicianApiService(mockWebServerRule.baseUrl)
-        val testRepository = com.miso.vinilos.model.repository.MusicianRepository(testApiService)
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        // Usar base de datos en memoria para pruebas (garantiza caché vacío)
+        testDatabase = Room.inMemoryDatabaseBuilder(
+            application,
+            VinylRoomDatabase::class.java
+        ).allowMainThreadQueries().build()
+        val musiciansDao = testDatabase!!.musiciansDao()
+        val testRepository = com.miso.vinilos.model.repository.MusicianRepository(application, musiciansDao, testApiService)
         val testPrizeRepository = com.miso.vinilos.model.repository.PrizeRepository.getInstance()
         return MusicianViewModel(testRepository, testPrizeRepository, Dispatchers.Unconfined)
     }

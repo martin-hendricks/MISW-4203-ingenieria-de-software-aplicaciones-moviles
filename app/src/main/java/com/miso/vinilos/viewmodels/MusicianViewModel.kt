@@ -244,7 +244,10 @@ class MusicianViewModel(
 
                         // Crear tarea asíncrona para cargar el premio
                         async(Dispatchers.IO) {
+                            android.util.Log.d("MusicianViewModel", "async: Premio $prizeId ejecutándose en thread=${Thread.currentThread().name}")
+                            delay(3000) // TEMPORAL: delay para visualizar en Profiler
                             val result = prizeRepository.getPrize(prizeId)
+                            android.util.Log.d("MusicianViewModel", "async: Premio $prizeId completado en thread=${Thread.currentThread().name}")
                             prizeId to result
                         }
                     }
