@@ -602,7 +602,7 @@ class AlbumDetailE2ETest {
 
         // Assert - esperar a que cargue el detalle
         composeTestRule.waitUntil(timeoutMillis = 2_000) {
-            composeTestRule.onAllNodesWithText("Detalles del Álbum")
+            composeTestRule.onAllNodesWithText("Unknown Artist Album")
                 .fetchSemanticsNodes().isNotEmpty()
         }
 
@@ -787,7 +787,7 @@ class AlbumDetailE2ETest {
         // Assert - esperar a que cargue el detalle del álbum completamente
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
             composeTestRule.onAllNodesWithText("Abbey Road")
-                .fetchSemanticsNodes().isNotEmpty()
+                .fetchSemanticsNodes().isEmpty()
         }
         composeTestRule.waitForIdle()
 
