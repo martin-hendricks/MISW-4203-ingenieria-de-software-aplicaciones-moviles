@@ -50,22 +50,6 @@ class ArtistDetailE2ETest {
     }
 
     /**
-     * Desplaza la lista hasta un texto objetivo y asegura su visibilidad
-     */
-    private fun scrollToAndAssertVisible(text: String) {
-        runCatching {
-            composeTestRule.onNodeWithText(text, substring = true)
-                .performScrollTo()
-        }
-        composeTestRule.waitUntil(timeoutMillis = 1_000) {
-            composeTestRule.onAllNodesWithText(text, substring = true)
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-        composeTestRule.onNodeWithText(text, substring = true, useUnmergedTree = true)
-            .assertIsDisplayed()
-    }
-
-    /**
      * Helper function to create a test ViewModel with MockWebServer
      */
     private fun createTestViewModel(): MusicianViewModel {

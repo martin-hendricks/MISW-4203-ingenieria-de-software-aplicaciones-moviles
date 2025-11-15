@@ -1,9 +1,12 @@
 package com.miso.vinilos.model.repository
 
+import android.app.Application
 import com.miso.vinilos.model.data.Collector
 import com.miso.vinilos.model.data.CollectorCreateDTO
+import com.miso.vinilos.model.database.dao.CollectorsDao
 import com.miso.vinilos.model.network.CollectorApiService
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody
@@ -18,12 +21,22 @@ import retrofit2.Response
 class CollectorRepositoryTest {
 
     private lateinit var apiService: CollectorApiService
+    private lateinit var collectorsDao: CollectorsDao
+    private lateinit var application: Application
     private lateinit var repository: CollectorRepository
 
     @Before
     fun setup() {
+        // Mockear dependencias
         apiService = mockk()
-        repository = CollectorRepository(apiService)
+        collectorsDao = mockk(relaxed = true)
+        application = mockk(relaxed = true)
+
+        // Configurar comportamiento por defecto del DAO (retornar lista vacía para que se consulte la red)
+        every { collectorsDao.getCollectors() } returns emptyList()
+        coEvery { collectorsDao.getCollector(any()) } returns null
+
+        repository = CollectorRepository(application, collectorsDao, apiService)
     }
 
     @Test

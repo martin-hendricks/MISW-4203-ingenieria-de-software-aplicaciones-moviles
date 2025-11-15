@@ -6,7 +6,6 @@ import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.Musician
 import com.miso.vinilos.model.data.Collector
 import okhttp3.mockwebserver.MockResponse
-import java.util.*
 
 /**
  * Helper para crear respuestas JSON para MockWebServer
@@ -72,17 +71,7 @@ object JsonResponseHelper {
             .setHeader("Content-Type", "application/json")
             .setBody("""{"error": "Not Found"}""")
     }
-    
-    /**
-     * Crea una respuesta de error 400 (Bad Request)
-     */
-    fun createBadRequestResponse(): MockResponse {
-        return MockResponse()
-            .setResponseCode(400)
-            .setHeader("Content-Type", "application/json")
-            .setBody("""{"error": "Bad Request"}""")
-    }
-    
+
     /**
      * Crea una respuesta de timeout (simula conexión lenta)
      */
@@ -93,58 +82,7 @@ object JsonResponseHelper {
             .setBody(gson.toJson(TestDataFactory.createTestAlbums()))
             .setBodyDelay(10, java.util.concurrent.TimeUnit.SECONDS) // 10 segundos de delay
     }
-    
-    /**
-     * Crea una respuesta de error de conexión (simula fallo de red)
-     */
-    fun createConnectionErrorResponse(): MockResponse {
-        return MockResponse()
-            .setResponseCode(200)
-            .setHeader("Content-Type", "application/json")
-            .setBody(gson.toJson(TestDataFactory.createTestAlbums()))
-            .setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START)
-    }
-    
-    /**
-     * Crea una respuesta con JSON malformado
-     */
-    fun createMalformedJsonResponse(): MockResponse {
-        return MockResponse()
-            .setResponseCode(200)
-            .setHeader("Content-Type", "application/json")
-            .setBody("{ invalid json }")
-    }
-    
-    /**
-     * Crea una respuesta con datos parciales (simula respuesta incompleta)
-     */
-    fun createPartialResponse(): MockResponse {
-        val partialJson = """
-            [
-                {
-                    "id": 1,
-                    "name": "Abbey Road",
-                    "cover": "https://example.com/abbey-road.jpg",
-                    "releaseDate": "1969-09-26T00:00:00.000Z",
-                    "description": "El último álbum grabado por The Beatles",
-                    "genre": {
-                        "id": 1,
-                        "name": "Rock"
-                    },
-                    "recordLabel": {
-                        "id": 1,
-                        "name": "Apple Records"
-                    }
-                }
-            ]
-        """.trimIndent()
-        
-        return MockResponse()
-            .setResponseCode(200)
-            .setHeader("Content-Type", "application/json")
-            .setBody(partialJson)
-    }
-    
+
     /**
      * Crea una respuesta exitosa con una lista de músicos
      */

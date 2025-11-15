@@ -55,7 +55,7 @@ class ArtistListE2ETest {
         val testApiService = TestRetrofitClient.createTestMusicianApiService(mockWebServerRule.baseUrl)
         val testRepository = com.miso.vinilos.model.repository.MusicianRepository(testApiService)
         val testPrizeRepository = com.miso.vinilos.model.repository.PrizeRepository.getInstance()
-        return com.miso.vinilos.viewmodels.MusicianViewModel(testRepository, testPrizeRepository, Dispatchers.Unconfined)
+        return MusicianViewModel(testRepository, testPrizeRepository, Dispatchers.Unconfined)
     }
 
     /**
@@ -134,7 +134,7 @@ class ArtistListE2ETest {
     @Test
     fun testLoadingStateDisplay() = runTest {
         // Arrange - Configurar respuesta con delay para simular carga lenta
-        val testMusicians = TestDataFactory.createTestMusicians()
+        TestDataFactory.createTestMusicians()
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createTimeoutResponse()
         )

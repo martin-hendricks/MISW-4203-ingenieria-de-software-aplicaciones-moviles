@@ -21,12 +21,4 @@ enum class RecordLabel(val displayName: String) {
     @SerializedName("Fania Records")
     FANIA("Fania Records");
 
-    companion object {
-        /**
-         * Obtiene el enum a partir del nombre de display
-         */
-        fun fromDisplayName(name: String): RecordLabel? {
-            return values().find { it.displayName == name }
-        }
-    }
 }

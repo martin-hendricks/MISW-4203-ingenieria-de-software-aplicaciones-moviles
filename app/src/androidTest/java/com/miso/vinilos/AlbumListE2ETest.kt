@@ -18,11 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.miso.vinilos.viewmodels.AlbumViewModel
-import com.miso.vinilos.viewmodels.ProfileViewModel
 import kotlinx.coroutines.Dispatchers
 
 /**
@@ -58,7 +54,7 @@ class AlbumListE2ETest {
     private fun createTestViewModel(): AlbumViewModel {
         val testApiService = TestRetrofitClient.createTestApiService(mockWebServerRule.baseUrl)
         val testRepository = com.miso.vinilos.model.repository.AlbumRepository(testApiService)
-        return com.miso.vinilos.viewmodels.AlbumViewModel(testRepository, Dispatchers.Unconfined)
+        return AlbumViewModel(testRepository, Dispatchers.Unconfined)
     }
 
     /**
@@ -118,7 +114,7 @@ class AlbumListE2ETest {
     @Test
     fun testLoadingStateDisplay() = runTest {
         // Arrange - Configurar respuesta con delay para simular carga lenta
-        val testAlbums = TestDataFactory.createTestAlbums()
+        TestDataFactory.createTestAlbums()
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createTimeoutResponse()
         )
