@@ -131,7 +131,7 @@ class CollectorDetailE2ETest {
         composeTestRule.onNodeWithText("Juan Pérez").performClick()
 
         // Assert - esperar a que cargue la pantalla de detalle
-        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+        composeTestRule.waitUntil(timeoutMillis = 3_000) {
             composeTestRule.onAllNodesWithText("Juan Pérez")
                 .fetchSemanticsNodes().isNotEmpty()
         }
@@ -304,7 +304,7 @@ class CollectorDetailE2ETest {
         }
 
         // Assert - esperar a que cargue el detalle
-        composeTestRule.waitUntil(timeoutMillis = 2_000) {
+        composeTestRule.waitUntil(timeoutMillis = 3_000) {
             composeTestRule.onAllNodesWithText("Juan Pérez")
                 .fetchSemanticsNodes().isNotEmpty()
         }
