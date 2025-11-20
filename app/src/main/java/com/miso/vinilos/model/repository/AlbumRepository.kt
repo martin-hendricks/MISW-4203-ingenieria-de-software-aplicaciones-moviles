@@ -70,6 +70,39 @@ class AlbumRepository(
     }
     
     /**
+     * Refresca la lista de álbumes desde la red, forzando la actualización del caché
+     * Siempre consulta la red y actualiza el caché local
+     * @return Result con la lista de álbumes o error
+     */
+    suspend fun refreshAlbums(): Result<List<Album>> {
+        return try {
+            // Verificar conectividad
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_WIFI &&
+                cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_MOBILE) {
+                // Sin conexión, retornar error
+                Result.failure(Exception("No hay conexión a internet"))
+            } else {
+                // Siempre obtener de la red
+                val response = apiService.getAlbums()
+                if (response.isSuccessful && response.body() != null) {
+                    val albums = response.body()!!
+                    // Limpiar caché anterior y guardar nuevos datos
+                    withContext(Dispatchers.IO) {
+                        albumsDao.deleteAll()
+                        albumsDao.insertAll(albums)
+                    }
+                    Result.success(albums)
+                } else {
+                    Result.failure(Exception("Error al obtener álbumes: ${response.code()}"))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Obtiene un álbum específico por ID usando estrategia cache-first
      * @param id ID del álbum
      * @return Result con el álbum o error
@@ -110,7 +143,12 @@ class AlbumRepository(
         return try {
             val response = apiService.createAlbum(album)
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                val createdAlbum = response.body()!!
+                // Insertar el nuevo álbum en el caché para que aparezca inmediatamente
+                withContext(Dispatchers.IO) {
+                    albumsDao.insert(createdAlbum)
+                }
+                Result.success(createdAlbum)
             } else {
                 Result.failure(Exception("Error al crear álbum: ${response.code()}"))
             }

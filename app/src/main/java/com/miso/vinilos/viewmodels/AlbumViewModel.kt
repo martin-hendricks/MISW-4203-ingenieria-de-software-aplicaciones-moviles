@@ -3,6 +3,7 @@ package com.miso.vinilos.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miso.vinilos.model.data.Album
+import com.miso.vinilos.model.data.AlbumCreateDTO
 import com.miso.vinilos.model.repository.AlbumRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +34,17 @@ sealed interface AlbumDetailUiState {
     object Loading : AlbumDetailUiState
     data class Success(val album: Album) : AlbumDetailUiState
     data class Error(val message: String, val canRetry: Boolean = true) : AlbumDetailUiState
+}
+
+/**
+ * Estado de la UI para crear un álbum
+ * Representa los diferentes estados posibles: Idle, Loading, Success, Error
+ */
+sealed interface CreateAlbumUiState {
+    object Idle : CreateAlbumUiState
+    object Loading : CreateAlbumUiState
+    data class Success(val album: Album) : CreateAlbumUiState
+    data class Error(val message: String) : CreateAlbumUiState
 }
 
 /**
@@ -72,6 +84,12 @@ class AlbumViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     @Suppress("unused") // Se usa en la UI para pull-to-refresh
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    /**
+     * Estado de la UI para crear un álbum, inicializado en Idle
+     */
+    private val _createAlbumUiState = MutableStateFlow<CreateAlbumUiState>(CreateAlbumUiState.Idle)
+    val createAlbumUiState: StateFlow<CreateAlbumUiState> = _createAlbumUiState.asStateFlow()
 
     /**
      * Carga la lista de álbumes desde el repositorio con retry automático
@@ -150,13 +168,14 @@ class AlbumViewModel(
     /**
      * Refresca la lista de álbumes
      * Útil para pull-to-refresh o cuando se necesita recargar los datos
+     * Fuerza la obtención desde la red y actualiza el caché
      */
     fun refreshAlbums() {
         viewModelScope.launch(dispatcher) {
             _isRefreshing.value = true
             try {
                 withTimeout(NETWORK_TIMEOUT_MS) {
-                    repository.getAlbums()
+                    repository.refreshAlbums()
                         .onSuccess { albums ->
                             if (albums.isEmpty()) {
                                 _uiState.value = AlbumUiState.Empty
@@ -173,6 +192,8 @@ class AlbumViewModel(
                                     "Error de conexión"
                                 exception.message?.contains("timeout") == true ->
                                     "Tiempo de espera agotado"
+                                exception.message?.contains("No hay conexión") == true ->
+                                    "No hay conexión a internet"
                                 else ->
                                     exception.message ?: "Error al refrescar"
                             }
@@ -253,6 +274,103 @@ class AlbumViewModel(
     @Suppress("unused") // Se usa en la UI para botones de retry
     fun retryLoadAlbumDetail(albumId: Int) {
         loadAlbumDetail(albumId)
+    }
+
+    /**
+     * Crea un nuevo álbum usando el repositorio
+     * 
+     * @param album Datos del álbum a crear
+     */
+    fun createAlbum(album: AlbumCreateDTO) {
+        viewModelScope.launch(dispatcher) {
+            _createAlbumUiState.value = CreateAlbumUiState.Loading
+
+            try {
+                withTimeout(NETWORK_TIMEOUT_MS) {
+                    repository.createAlbum(album)
+                        .onSuccess { createdAlbum ->
+                            // Primero refrescar la lista para asegurar que se obtengan los datos actualizados
+                            // Esto incluye el nuevo álbum que acabamos de crear
+                            refreshAlbumsSync()
+                            // Después de refrescar, establecer el estado de éxito
+                            // Esto asegura que la lista ya esté actualizada cuando se navega de vuelta
+                            _createAlbumUiState.value = CreateAlbumUiState.Success(createdAlbum)
+                        }
+                        .onFailure { exception ->
+                            val errorMessage = when {
+                                exception.message?.contains("Unable to resolve host") == true ->
+                                    "No se puede conectar al servidor. Verifica tu conexión de red"
+                                exception.message?.contains("Failed to connect") == true ->
+                                    "Error de conexión. Verifica tu conexión de red"
+                                exception.message?.contains("timeout") == true ->
+                                    "Tiempo de espera agotado. El servidor no responde"
+                                exception.message?.contains("400") == true ->
+                                    "Datos inválidos. Verifica que todos los campos estén correctos"
+                                exception.message?.contains("500") == true ->
+                                    "Error del servidor. Intenta más tarde"
+                                else ->
+                                    "Error: ${exception.message ?: "Error desconocido al crear el álbum"}"
+                            }
+                            _createAlbumUiState.value = CreateAlbumUiState.Error(errorMessage)
+                        }
+                }
+            } catch (e: TimeoutCancellationException) {
+                _createAlbumUiState.value = CreateAlbumUiState.Error(
+                    "Tiempo de espera agotado al crear el álbum"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Refresca la lista de álbumes de forma síncrona (espera a que termine)
+     * Útil cuando se necesita asegurar que el refresh se complete antes de continuar
+     */
+    private suspend fun refreshAlbumsSync() {
+        _isRefreshing.value = true
+        try {
+            withTimeout(NETWORK_TIMEOUT_MS) {
+                repository.refreshAlbums()
+                    .onSuccess { albums ->
+                        if (albums.isEmpty()) {
+                            _uiState.value = AlbumUiState.Empty
+                        } else {
+                            _uiState.value = AlbumUiState.Success(albums)
+                        }
+                    }
+                    .onFailure { exception ->
+                        // En refresh no hacemos retry, mostramos el error inmediatamente
+                        val errorMessage = when {
+                            exception.message?.contains("Unable to resolve host") == true ->
+                                "No se puede conectar al servidor"
+                            exception.message?.contains("Failed to connect") == true ->
+                                "Error de conexión"
+                            exception.message?.contains("timeout") == true ->
+                                "Tiempo de espera agotado"
+                            exception.message?.contains("No hay conexión") == true ->
+                                "No hay conexión a internet"
+                            else ->
+                                exception.message ?: "Error al refrescar"
+                        }
+                        _uiState.value = AlbumUiState.Error(errorMessage, canRetry = true)
+                    }
+            }
+        } catch (e: TimeoutCancellationException) {
+            _uiState.value = AlbumUiState.Error(
+                "Tiempo de espera agotado al refrescar",
+                canRetry = true
+            )
+        } finally {
+            _isRefreshing.value = false
+        }
+    }
+
+    /**
+     * Reinicia el estado de creación de álbum
+     * Útil cuando se navega fuera de la pantalla de creación
+     */
+    fun clearCreateAlbumState() {
+        _createAlbumUiState.value = CreateAlbumUiState.Idle
     }
 
     init {

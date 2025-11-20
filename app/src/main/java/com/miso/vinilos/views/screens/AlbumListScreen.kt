@@ -3,10 +3,15 @@ package com.miso.vinilos.views.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.UserRole
@@ -23,16 +28,48 @@ import com.miso.vinilos.viewmodels.ProfileViewModel
  * @param albumViewModel ViewModel que gestiona el estado de los álbumes
  * @param profileViewModel ViewModel que gestiona el perfil del usuario
  * @param onAlbumClick Callback que se ejecuta cuando se hace clic en un álbum
+ * @param onAddAlbum Callback que se ejecuta cuando se presiona el botón de agregar
  */
 @Composable
 fun AlbumListScreen(
     albumViewModel: AlbumViewModel,
     profileViewModel: ProfileViewModel,
-    onAlbumClick: (Album) -> Unit
+    onAlbumClick: (Album) -> Unit,
+    onAddAlbum: () -> Unit = {}
 ) {
     // Observa el estado de la UI desde el ViewModel
     val uiState by albumViewModel.uiState.collectAsStateWithLifecycle()
     val userRole by profileViewModel.userRole.collectAsStateWithLifecycle()
+    val createAlbumState by albumViewModel.createAlbumUiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
+    // Forzar refresh cuando la pantalla se vuelve visible (onResume)
+    // Esto asegura que siempre se obtengan los datos más recientes del servidor
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Forzar un refresh completo contra el servicio cuando se vuelve a la pantalla
+                albumViewModel.refreshAlbums()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Refrescar la lista cuando se detecta que se creó un álbum exitosamente
+    LaunchedEffect(createAlbumState) {
+        if (createAlbumState is com.miso.vinilos.viewmodels.CreateAlbumUiState.Success) {
+            // Forzar un refresh completo de la lista para mostrar el nuevo álbum
+            // Esperar un momento para asegurar que el servidor haya procesado el nuevo álbum
+            kotlinx.coroutines.delay(500)
+            albumViewModel.refreshAlbums()
+            // Esperar a que el refresh se complete antes de limpiar el estado
+            kotlinx.coroutines.delay(2000)
+            albumViewModel.clearCreateAlbumState()
+        }
+    }
     
     // Renderiza según el estado actual
     when (val currentState = uiState) {
@@ -44,9 +81,7 @@ fun AlbumListScreen(
                 albums = currentState.albums,
                 userRole = userRole,
                 onAlbumClick = onAlbumClick,
-                onAddAlbum = {
-                    // TODO: Navegar a pantalla de agregar álbum
-                }
+                onAddAlbum = onAddAlbum
             )
         }
         is AlbumUiState.Error -> {
