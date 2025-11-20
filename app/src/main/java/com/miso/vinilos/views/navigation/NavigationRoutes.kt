@@ -9,6 +9,7 @@ sealed class NavigationRoutes(val route: String) {
     object AlbumDetail : NavigationRoutes("albums/{albumId}") {
         fun createRoute(albumId: Int) = "albums/$albumId"
     }
+    object CreateAlbum : NavigationRoutes("albums/create")
     object Artists : NavigationRoutes("artists")
     object ArtistDetail : NavigationRoutes("artists/{musicianId}") {
         fun createRoute(musicianId: Int) = "artists/$musicianId"
