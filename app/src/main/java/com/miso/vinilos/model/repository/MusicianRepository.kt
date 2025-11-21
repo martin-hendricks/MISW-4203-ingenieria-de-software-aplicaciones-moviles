@@ -99,6 +99,39 @@ class MusicianRepository(
     }
     
     /**
+     * Refresca un músico específico desde la red, forzando la actualización del caché
+     * Siempre consulta la red y actualiza el caché local
+     * @param id ID del músico
+     * @return Result con el músico o error
+     */
+    suspend fun refreshMusician(id: Int): Result<Musician> {
+        return try {
+            // Verificar conectividad
+            val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            if (cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_WIFI &&
+                cm.activeNetworkInfo?.type != ConnectivityManager.TYPE_MOBILE) {
+                // Sin conexión, retornar error
+                Result.failure(Exception("No hay conexión a internet"))
+            } else {
+                // Siempre obtener de la red
+                val response = apiService.getMusician(id)
+                if (response.isSuccessful && response.body() != null) {
+                    val musician = response.body()!!
+                    // Actualizar caché con los datos más recientes
+                    withContext(Dispatchers.IO) {
+                        musiciansDao.insert(musician)
+                    }
+                    Result.success(musician)
+                } else {
+                    Result.failure(Exception("Error al obtener músico: ${response.code()}"))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Crea un nuevo músico
      * @param musician Datos del músico a crear
      * @return Result con el músico creado o error
@@ -147,6 +180,25 @@ class MusicianRepository(
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Error al eliminar músico: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Agrega un álbum a un músico
+     * @param musicianId ID del músico
+     * @param albumId ID del álbum
+     * @return Result indicando éxito o error
+     */
+    suspend fun addAlbumToMusician(musicianId: Int, albumId: Int): Result<Unit> {
+        return try {
+            val response = apiService.addAlbumToMusician(musicianId, albumId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al agregar álbum al músico: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,12 +33,14 @@ import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.Musician
 import com.miso.vinilos.model.data.PerformerPrize
 import com.miso.vinilos.model.data.Prize
+import com.miso.vinilos.model.data.UserRole
 import android.util.Log
 import com.miso.vinilos.model.network.NetworkConstants
 import com.miso.vinilos.utils.ImageUrlHelper
 import com.miso.vinilos.viewmodels.MusicianDetailUiState
 import com.miso.vinilos.viewmodels.MusicianViewModel
 import com.miso.vinilos.viewmodels.PrizeState
+import com.miso.vinilos.viewmodels.ProfileViewModel
 import com.miso.vinilos.views.theme.LightGreen
 import com.miso.vinilos.views.theme.MidGreen
 import com.miso.vinilos.views.theme.Yellow
@@ -50,13 +53,17 @@ import java.util.Locale
  *
  * @param musicianId ID del músico a mostrar
  * @param musicianViewModel ViewModel que gestiona el estado del músico
+ * @param profileViewModel ViewModel que gestiona el perfil del usuario
  * @param onBack Callback para volver a la pantalla anterior
+ * @param onAddAlbum Callback para agregar un álbum al artista
  */
 @Composable
 fun ArtistDetailScreen(
     musicianId: Int,
     musicianViewModel: MusicianViewModel,
-    onBack: () -> Unit
+    profileViewModel: ProfileViewModel,
+    onBack: () -> Unit,
+    onAddAlbum: () -> Unit = {}
 ) {
     // Cargar el músico cuando se crea la pantalla
     LaunchedEffect(musicianId) {
@@ -68,6 +75,9 @@ fun ArtistDetailScreen(
     
     // Observar el estado de los premios
     val prizesState by musicianViewModel.prizesState.collectAsStateWithLifecycle()
+    
+    // Observar el rol del usuario
+    val userRole by profileViewModel.userRole.collectAsStateWithLifecycle()
 
     // Renderizar según el estado actual
     when (val currentState = detailState) {
@@ -98,7 +108,9 @@ fun ArtistDetailScreen(
             ArtistDetailContent(
                 musician = currentState.musician,
                 prizesState = prizesState,
-                onBack = onBack
+                userRole = userRole,
+                onBack = onBack,
+                onAddAlbum = onAddAlbum
             )
         }
         is MusicianDetailUiState.Error -> {
@@ -118,7 +130,9 @@ fun ArtistDetailScreen(
 private fun ArtistDetailContent(
     musician: Musician,
     prizesState: Map<Int, PrizeState>,
-    onBack: () -> Unit
+    userRole: UserRole,
+    onBack: () -> Unit,
+    onAddAlbum: () -> Unit = {}
 ) {
     // Calcular si todos los premios han terminado de cargarse (fuera del LazyColumn)
     // Como prizesState viene de un StateFlow, Compose recompone automáticamente cuando cambia
@@ -186,7 +200,11 @@ private fun ArtistDetailContent(
             
             // Álbumes del artista
             item {
-                ArtistAlbumsSection(musician.albums)
+                ArtistAlbumsSection(
+                    albums = musician.albums,
+                    userRole = userRole,
+                    onAddAlbum = onAddAlbum
+                )
             }
             
             // Siempre renderizar la sección de premios - ella manejará el estado de carga internamente
@@ -408,20 +426,41 @@ private fun ArtistDescriptionSection(musician: Musician) {
  * Sección de álbumes del artista
  */
 @Composable
-private fun ArtistAlbumsSection(albums: List<Album>?) {
+private fun ArtistAlbumsSection(
+    albums: List<Album>?,
+    userRole: UserRole,
+    onAddAlbum: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .padding(bottom = 24.dp)
     ) {
-        Text(
-            text = "Álbumes (${albums?.size ?: 0})",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Álbumes",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            // Solo mostrar el botón si el usuario es coleccionista
+            if (userRole == UserRole.COLLECTOR) {
+                IconButton(onClick = onAddAlbum) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Agregar álbum",
+                        tint = Yellow
+                    )
+                }
+            }
+        }
 
         if (albums.isNullOrEmpty()) {
             Text(

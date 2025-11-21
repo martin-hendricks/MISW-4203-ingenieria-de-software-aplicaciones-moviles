@@ -50,6 +50,16 @@ data class PrizeState(
 )
 
 /**
+ * Estado de la UI para agregar álbum a músico
+ */
+sealed interface AddAlbumToMusicianUiState {
+    object Idle : AddAlbumToMusicianUiState
+    object Loading : AddAlbumToMusicianUiState
+    data class Success(val musicianId: Int) : AddAlbumToMusicianUiState
+    data class Error(val message: String) : AddAlbumToMusicianUiState
+}
+
+/**
  * ViewModel para gestionar el estado y la lógica de negocio de la lista de músicos
  * Sigue el patrón MVVM de Android Architecture Guidelines
  * Incluye carga paralela de premios para optimizar el rendimiento
@@ -87,6 +97,12 @@ class MusicianViewModel(
      */
     private val _prizesState = MutableStateFlow<Map<Int, PrizeState>>(emptyMap())
     val prizesState: StateFlow<Map<Int, PrizeState>> = _prizesState.asStateFlow()
+    
+    /**
+     * Estado de agregar álbum a músico
+     */
+    private val _addAlbumToMusicianState = MutableStateFlow<AddAlbumToMusicianUiState>(AddAlbumToMusicianUiState.Idle)
+    val addAlbumToMusicianState: StateFlow<AddAlbumToMusicianUiState> = _addAlbumToMusicianState.asStateFlow()
     
     /**
      * Carga la lista de músicos desde el repositorio con retry automático
@@ -298,6 +314,87 @@ class MusicianViewModel(
      */
     fun clearPrizesState() {
         _prizesState.value = emptyMap()
+    }
+    
+    /**
+     * Agrega un álbum a un músico
+     * @param musicianId ID del músico
+     * @param albumId ID del álbum
+     */
+    fun addAlbumToMusician(musicianId: Int, albumId: Int) {
+        viewModelScope.launch(dispatcher) {
+            _addAlbumToMusicianState.value = AddAlbumToMusicianUiState.Loading
+            
+            try {
+                withTimeout(NETWORK_TIMEOUT_MS) {
+                    repository.addAlbumToMusician(musicianId, albumId)
+                        .onSuccess {
+                            _addAlbumToMusicianState.value = AddAlbumToMusicianUiState.Success(musicianId)
+                            // Refrescar el detalle del músico desde la red para mostrar el nuevo álbum
+                            refreshMusicianDetail(musicianId)
+                        }
+                        .onFailure { exception ->
+                            val errorMessage = when {
+                                exception.message?.contains("Unable to resolve host") == true ->
+                                    "No se puede conectar al servidor"
+                                exception.message?.contains("Failed to connect") == true ->
+                                    "Error de conexión. Verifica tu conexión de red"
+                                exception.message?.contains("timeout") == true ->
+                                    "Tiempo de espera agotado"
+                                else ->
+                                    exception.message ?: "Error desconocido al agregar álbum"
+                            }
+                            _addAlbumToMusicianState.value = AddAlbumToMusicianUiState.Error(errorMessage)
+                        }
+                }
+            } catch (e: TimeoutCancellationException) {
+                _addAlbumToMusicianState.value = AddAlbumToMusicianUiState.Error("Tiempo de espera agotado")
+            }
+        }
+    }
+    
+    /**
+     * Refresca el detalle de un músico desde la red, forzando la actualización
+     * Útil después de agregar un álbum para obtener los datos más recientes
+     * @param musicianId ID del músico a refrescar
+     */
+    fun refreshMusicianDetail(musicianId: Int) {
+        viewModelScope.launch(dispatcher) {
+            _musicianDetailState.value = MusicianDetailUiState.Loading
+
+            try {
+                withTimeout(NETWORK_TIMEOUT_MS) {
+                    repository.refreshMusician(musicianId)
+                        .onSuccess { musician ->
+                            _musicianDetailState.value = MusicianDetailUiState.Success(musician)
+                        }
+                        .onFailure { exception ->
+                            val errorMessage = when {
+                                exception.message?.contains("Unable to resolve host") == true ->
+                                    "No se puede conectar al servidor. Verifica que el backend esté corriendo en localhost:3000"
+                                exception.message?.contains("Failed to connect") == true ->
+                                    "Error de conexión. Verifica tu conexión de red"
+                                exception.message?.contains("timeout") == true ->
+                                    "Tiempo de espera agotado. El servidor no responde"
+                                exception.message?.contains("no encontrado") == true ->
+                                    "El músico no fue encontrado"
+                                else ->
+                                    "Error: ${exception.message ?: "Error desconocido al cargar el músico"}"
+                            }
+                            _musicianDetailState.value = MusicianDetailUiState.Error(errorMessage)
+                        }
+                }
+            } catch (e: TimeoutCancellationException) {
+                _musicianDetailState.value = MusicianDetailUiState.Error("Tiempo de espera agotado")
+            }
+        }
+    }
+    
+    /**
+     * Limpia el estado de agregar álbum a músico
+     */
+    fun clearAddAlbumToMusicianState() {
+        _addAlbumToMusicianState.value = AddAlbumToMusicianUiState.Idle
     }
 
     init {
