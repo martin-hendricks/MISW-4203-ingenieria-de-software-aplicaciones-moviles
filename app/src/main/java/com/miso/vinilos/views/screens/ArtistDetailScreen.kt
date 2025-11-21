@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,12 +52,14 @@ import java.util.Locale
  * @param musicianId ID del músico a mostrar
  * @param musicianViewModel ViewModel que gestiona el estado del músico
  * @param onBack Callback para volver a la pantalla anterior
+ * @param onAddAlbum Callback para agregar un álbum al artista
  */
 @Composable
 fun ArtistDetailScreen(
     musicianId: Int,
     musicianViewModel: MusicianViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onAddAlbum: () -> Unit = {}
 ) {
     // Cargar el músico cuando se crea la pantalla
     LaunchedEffect(musicianId) {
@@ -98,7 +101,8 @@ fun ArtistDetailScreen(
             ArtistDetailContent(
                 musician = currentState.musician,
                 prizesState = prizesState,
-                onBack = onBack
+                onBack = onBack,
+                onAddAlbum = onAddAlbum
             )
         }
         is MusicianDetailUiState.Error -> {
@@ -118,7 +122,8 @@ fun ArtistDetailScreen(
 private fun ArtistDetailContent(
     musician: Musician,
     prizesState: Map<Int, PrizeState>,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onAddAlbum: () -> Unit = {}
 ) {
     // Calcular si todos los premios han terminado de cargarse (fuera del LazyColumn)
     // Como prizesState viene de un StateFlow, Compose recompone automáticamente cuando cambia
@@ -186,7 +191,10 @@ private fun ArtistDetailContent(
             
             // Álbumes del artista
             item {
-                ArtistAlbumsSection(musician.albums)
+                ArtistAlbumsSection(
+                    albums = musician.albums,
+                    onAddAlbum = onAddAlbum
+                )
             }
             
             // Siempre renderizar la sección de premios - ella manejará el estado de carga internamente
@@ -408,20 +416,37 @@ private fun ArtistDescriptionSection(musician: Musician) {
  * Sección de álbumes del artista
  */
 @Composable
-private fun ArtistAlbumsSection(albums: List<Album>?) {
+private fun ArtistAlbumsSection(
+    albums: List<Album>?,
+    onAddAlbum: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .padding(bottom = 24.dp)
     ) {
-        Text(
-            text = "Álbumes (${albums?.size ?: 0})",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Álbumes",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            IconButton(onClick = onAddAlbum) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Agregar álbum",
+                    tint = Yellow
+                )
+            }
+        }
 
         if (albums.isNullOrEmpty()) {
             Text(

@@ -17,6 +17,7 @@ import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.screens.CreateAlbumScreen
 import com.miso.vinilos.views.screens.ArtistListScreen
 import com.miso.vinilos.views.screens.ArtistDetailScreen
+import com.miso.vinilos.views.screens.SelectAlbumToArtistScreen
 import com.miso.vinilos.views.screens.CollectorListScreen
 import com.miso.vinilos.views.screens.CollectorDetailScreen
 import com.miso.vinilos.views.screens.ProfileScreen
@@ -125,6 +126,27 @@ fun AppNavigation(
                 val sharedMusicianViewModel = musicianViewModel ?: createMusicianViewModel()
                 ArtistDetailScreen(
                     musicianId = musicianId,
+                    musicianViewModel = sharedMusicianViewModel,
+                    onBack = { navController.popBackStack() },
+                    onAddAlbum = {
+                        navController.navigate(NavigationRoutes.SelectAlbumToArtist.createRoute(musicianId))
+                    }
+                )
+            }
+            
+            // Pantalla de Seleccionar Álbum para Artista
+            composable(
+                route = NavigationRoutes.SelectAlbumToArtist.route,
+                arguments = listOf(
+                    navArgument("musicianId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val musicianId = backStackEntry.arguments?.getInt("musicianId") ?: 0
+                val sharedAlbumViewModel = albumViewModel ?: createAlbumViewModel()
+                val sharedMusicianViewModel = musicianViewModel ?: createMusicianViewModel()
+                SelectAlbumToArtistScreen(
+                    musicianId = musicianId,
+                    albumViewModel = sharedAlbumViewModel,
                     musicianViewModel = sharedMusicianViewModel,
                     onBack = { navController.popBackStack() }
                 )
