@@ -127,6 +127,7 @@ fun AppNavigation(
                 ArtistDetailScreen(
                     musicianId = musicianId,
                     musicianViewModel = sharedMusicianViewModel,
+                    profileViewModel = sharedProfileViewModel,
                     onBack = { navController.popBackStack() },
                     onAddAlbum = {
                         navController.navigate(NavigationRoutes.SelectAlbumToArtist.createRoute(musicianId))
