@@ -148,4 +148,27 @@ object JsonResponseHelper {
             .setHeader("Content-Type", "application/json")
             .setBody(json)
     }
+    
+    /**
+     * Crea una respuesta exitosa 201 (Created) para POST requests
+     * Usado para crear nuevos recursos como álbumes
+     */
+    fun createCreatedResponse(resource: Any): MockResponse {
+        val json = gson.toJson(resource)
+        return MockResponse()
+            .setResponseCode(201)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta exitosa 200 (OK) para POST requests que no crean recursos
+     * Usado para operaciones como asociar álbum a artista
+     */
+    fun createOkResponse(): MockResponse {
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody("{}")
+    }
 }
