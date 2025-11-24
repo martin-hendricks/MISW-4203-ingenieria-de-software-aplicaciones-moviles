@@ -15,6 +15,7 @@ import androidx.room.Room
 import com.miso.vinilos.model.database.VinylRoomDatabase
 import com.miso.vinilos.rules.MockWebServerRule
 import com.miso.vinilos.rules.ScreenshotTestRule
+import com.miso.vinilos.rules.TestDispatcherRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
@@ -42,13 +43,16 @@ import kotlinx.coroutines.Dispatchers
 @LargeTest
 class CollectorListE2ETest {
 
-    @get:Rule
+    @get:Rule(order = 0)
+    val testDispatcherRule = TestDispatcherRule()
+
+    @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    @get:Rule
+    @get:Rule(order = 2)
     val mockWebServerRule = MockWebServerRule()
 
-    @get:Rule
+    @get:Rule(order = 3)
     val screenshotTestRule = ScreenshotTestRule().apply {
         setComposeTestRule(composeTestRule)
     }
@@ -77,7 +81,8 @@ class CollectorListE2ETest {
         val albumsDao = testDatabase!!.albumsDao()
         val testAlbumApiService = TestRetrofitClient.createTestApiService(mockWebServerRule.baseUrl)
         val testAlbumRepository = com.miso.vinilos.model.repository.AlbumRepository(application, albumsDao, testAlbumApiService)
-        return CollectorViewModel(testRepository, testAlbumRepository, Dispatchers.Unconfined)
+        // Usar Dispatchers.Main (controlado por TestDispatcherRule)
+        return CollectorViewModel(testRepository, testAlbumRepository, Dispatchers.Main)
     }
 
     /**
@@ -105,20 +110,13 @@ class CollectorListE2ETest {
         }
 
         // Navigate to Collectors screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Coleccionistas").performClick()
-        
-        // Esperar a que la pantalla se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            val titleNodes = composeTestRule.onAllNodesWithText("Coleccionistas")
-            titleNodes.fetchSemanticsNodes().isNotEmpty()
-        }
-        
-        // Esperar a que los coleccionistas se carguen
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule.onAllNodesWithText("Juan Pérez")
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
+        composeTestRule.waitForIdle()
 
         // Assert
         // Verificar que el título está visible (buscar el del header, no el tab)
@@ -170,8 +168,13 @@ class CollectorListE2ETest {
         }
 
         // Navigate to Collectors screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Coleccionistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
+        composeTestRule.waitForIdle()
 
         // Assert - Verificar que el estado de carga es visible inicialmente
         // Nota: No verificamos el CircularProgressIndicator directamente porque no tiene contentDescription
@@ -206,8 +209,12 @@ class CollectorListE2ETest {
         }
 
         // Navigate to Collectors screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Coleccionistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert
@@ -252,8 +259,12 @@ class CollectorListE2ETest {
         }
 
         // Navigate to Collectors screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Coleccionistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert - Verificar estado de error inicial
@@ -354,8 +365,12 @@ class CollectorListE2ETest {
         }
 
         // Navigate to Collectors screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Coleccionistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert
@@ -478,8 +493,12 @@ class CollectorListE2ETest {
         }
 
         // Navigate to Collectors screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Coleccionistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert

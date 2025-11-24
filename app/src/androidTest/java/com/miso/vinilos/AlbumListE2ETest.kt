@@ -15,6 +15,7 @@ import androidx.room.Room
 import com.miso.vinilos.model.database.VinylRoomDatabase
 import com.miso.vinilos.rules.MockWebServerRule
 import com.miso.vinilos.rules.ScreenshotTestRule
+import com.miso.vinilos.rules.TestDispatcherRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
@@ -42,13 +43,16 @@ import kotlinx.coroutines.Dispatchers
 @LargeTest
 class AlbumListE2ETest {
 
-    @get:Rule
+    @get:Rule(order = 0)
+    val testDispatcherRule = TestDispatcherRule()
+
+    @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    @get:Rule
+    @get:Rule(order = 2)
     val mockWebServerRule = MockWebServerRule()
 
-    @get:Rule
+    @get:Rule(order = 3)
     val screenshotTestRule = ScreenshotTestRule().apply {
         setComposeTestRule(composeTestRule)
     }
@@ -74,7 +78,8 @@ class AlbumListE2ETest {
         ).allowMainThreadQueries().build()
         val albumsDao = testDatabase!!.albumsDao()
         val testRepository = com.miso.vinilos.model.repository.AlbumRepository(application, albumsDao, testApiService)
-        return AlbumViewModel(testRepository, Dispatchers.Unconfined)
+        // Usar Dispatchers.Main (controlado por TestDispatcherRule)
+        return AlbumViewModel(testRepository, Dispatchers.Main)
     }
 
     /**
@@ -101,9 +106,10 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
-        
+
         // Capturar screenshot del estado inicial después de cargar
         screenshotTestRule.takeScreenshot("01-lista-cargada")
         
@@ -151,7 +157,11 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert - Verificar que el estado de carga es visible inicialmente
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
+        composeTestRule.waitForIdle()
+
+        // Verificar que el estado de carga es visible inicialmente
         CustomMatchers.verifyLoadingTextIsVisible(composeTestRule)
         CustomMatchers.verifyCircularProgressIndicatorIsVisible(composeTestRule)
         
@@ -182,9 +192,10 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
-        
+
         // Verificar que el mensaje de error está visible
         CustomMatchers.verifyErrorMessageIsVisible(composeTestRule)
         
@@ -226,10 +237,11 @@ class AlbumListE2ETest {
         }
 
         // Assert - Verificar estado de error inicial
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         CustomMatchers.verifyErrorMessageIsVisible(composeTestRule)
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
-        
+
         // Capturar screenshot del estado de error inicial
         screenshotTestRule.takeScreenshot("01-estado-error")
 
@@ -237,6 +249,7 @@ class AlbumListE2ETest {
         composeTestRule.onNodeWithText("Reintentar").performClick()
 
         // Assert - Verificar que los álbumes se cargan después del reintento
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "The Dark Side of the Moon")
@@ -268,9 +281,10 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
-        
+
         // Verificar que el título está visible
         CustomMatchers.verifyAlbumsTitleIsVisible(composeTestRule)
         
@@ -308,12 +322,13 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
-        
+
         // Capturar screenshot inicial de la lista
         screenshotTestRule.takeScreenshot("01-lista-cargada")
-        
+
         // Verificar elementos específicos del primer álbum
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyPerformerIsVisible(composeTestRule, "The Beatles")
@@ -355,14 +370,15 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Verificar que la pantalla se muestra correctamente
         CustomMatchers.verifyAlbumsTitleIsVisible(composeTestRule)
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyBottomNavigationIsVisible(composeTestRule)
-        
+
         // Capturar screenshot del rol coleccionista
         screenshotTestRule.takeScreenshot("rol-coleccionista")
     }
@@ -392,7 +408,8 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Verificar que la pantalla se muestra correctamente
@@ -428,7 +445,8 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Verificar que la navegación inferior está visible
@@ -469,9 +487,10 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
-        
+
         // Verificar que los primeros álbumes están visibles
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "The Dark Side of the Moon")
@@ -517,9 +536,10 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
-        
+
         // Verificar que el álbum está visible
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Unknown Artist Album")
         
@@ -558,7 +578,8 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert
+        // Assert - Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Verificar que el álbum está visible

@@ -15,6 +15,7 @@ import androidx.room.Room
 import com.miso.vinilos.model.database.VinylRoomDatabase
 import com.miso.vinilos.rules.MockWebServerRule
 import com.miso.vinilos.rules.ScreenshotTestRule
+import com.miso.vinilos.rules.TestDispatcherRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.test.runTest
@@ -42,13 +43,16 @@ import kotlinx.coroutines.Dispatchers
 @LargeTest
 class ArtistListE2ETest {
 
-    @get:Rule
+    @get:Rule(order = 0)
+    val testDispatcherRule = TestDispatcherRule()
+
+    @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    @get:Rule
+    @get:Rule(order = 2)
     val mockWebServerRule = MockWebServerRule()
 
-    @get:Rule
+    @get:Rule(order = 3)
     val screenshotTestRule = ScreenshotTestRule().apply {
         setComposeTestRule(composeTestRule)
     }
@@ -75,7 +79,8 @@ class ArtistListE2ETest {
         val musiciansDao = testDatabase!!.musiciansDao()
         val testRepository = com.miso.vinilos.model.repository.MusicianRepository(application, musiciansDao, testApiService)
         val testPrizeRepository = com.miso.vinilos.model.repository.PrizeRepository.getInstance()
-        return MusicianViewModel(testRepository, testPrizeRepository, Dispatchers.Unconfined)
+        // Usar Dispatchers.Main (controlado por TestDispatcherRule)
+        return MusicianViewModel(testRepository, testPrizeRepository, Dispatchers.Main)
     }
 
     /**
@@ -103,21 +108,13 @@ class ArtistListE2ETest {
         }
 
         // Navigate to Artists screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Artistas").performClick()
-        
-        // Esperar a que la pantalla se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            // Verificar que el título está visible (puede ser el nodo 0 o 1 dependiendo de si hay tab)
-            val titleNodes = composeTestRule.onAllNodesWithText("Artistas")
-            titleNodes.fetchSemanticsNodes().isNotEmpty()
-        }
-        
-        // Esperar a que los artistas se carguen
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
-            composeTestRule.onAllNodesWithText("John Lennon")
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
+        composeTestRule.waitForIdle()
 
         // Assert
         // Verificar que el título está visible (buscar el del header, no el tab)
@@ -172,8 +169,13 @@ class ArtistListE2ETest {
         }
 
         // Navigate to Artists screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Artistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
+        composeTestRule.waitForIdle()
 
         // Assert - Verificar que el estado de carga es visible inicialmente
         // Nota: No verificamos el CircularProgressIndicator directamente porque no tiene contentDescription
@@ -208,8 +210,12 @@ class ArtistListE2ETest {
         }
 
         // Navigate to Artists screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Artistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert
@@ -254,8 +260,12 @@ class ArtistListE2ETest {
         }
 
         // Navigate to Artists screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Artistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert - Verificar estado de error inicial
@@ -356,8 +366,12 @@ class ArtistListE2ETest {
         }
 
         // Navigate to Artists screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Artistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert
@@ -475,8 +489,12 @@ class ArtistListE2ETest {
         }
 
         // Navigate to Artists screen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Artistas").performClick()
+
+        // Esperar a que las corrutinas se completen
+        testDispatcherRule.advanceUntilIdle()
         composeTestRule.waitForIdle()
 
         // Assert
