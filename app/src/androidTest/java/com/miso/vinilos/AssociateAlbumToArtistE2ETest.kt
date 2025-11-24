@@ -126,7 +126,7 @@ class AssociateAlbumToArtistE2ETest {
         val testMusician = TestDataFactory.createTestMusicianWithFullDetails()
         val testAlbums = TestDataFactory.createTestAlbums()
         val albumToAssociate = testAlbums.first()
-        
+
         // PRIMERA respuesta: lista de artistas (GET /musicians)
         // Esta es la primera llamada que hace MusicianViewModel en init
         mockWebServerRule.server.enqueue(
@@ -153,11 +153,14 @@ class AssociateAlbumToArtistE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusicianSuccessResponse(updatedMusician)
         )
-        
+
         // Crear los ViewModels DESPUÉS de encolar las respuestas
         // El MusicianViewModel cargará automáticamente y usará la primera respuesta
         val (albumViewModel, musicianViewModel) = createTestViewModels()
         val profileViewModel = createTestProfileViewModel()
+
+        // Esperar un poco para que el init del ViewModel inicie la carga
+        Thread.sleep(100)
 
         // Act - Configurar la UI
         composeTestRule.setContent {
@@ -174,19 +177,30 @@ class AssociateAlbumToArtistE2ETest {
 
         // Esperar a que cargue la pantalla inicial
         composeTestRule.waitForIdle()
-        
+
         // Capturar screenshot del estado inicial
         screenshotTestRule.takeScreenshot("01-pantalla-inicial")
-        
+
         // Navegar a la pantalla de artistas
         composeTestRule.onNodeWithText("Artistas")
             .assertIsDisplayed()
             .performClick()
-        
+
         composeTestRule.waitForIdle()
-        
+
+        // Esperar a que la pantalla se cargue completamente
+        // Primero verificar que el título está visible (puede ser el nodo 0 o 1 dependiendo de si hay tab)
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+            try {
+                val titleNodes = composeTestRule.onAllNodesWithText("Artistas")
+                titleNodes.fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
+
         // Esperar a que la lista de artistas se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -194,17 +208,17 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        
+
         // Capturar screenshot de la lista de artistas
         screenshotTestRule.takeScreenshot("02-lista-artistas")
-        
+
         // Hacer clic en el primer artista para ver su detalle
         composeTestRule.onNodeWithText("John Lennon", substring = true)
             .assertIsDisplayed()
             .performClick()
-        
+
         // Esperar a que cargue el detalle del artista
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon")
                     .fetchSemanticsNodes().isNotEmpty()
@@ -212,30 +226,30 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        
+
         // VALIDAR EL DETALLE DEL ARTISTA (similar a ArtistDetailE2ETest)
         // Verificar que el artista está visible
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
-        
+
         // Verificar que la descripción está visible
         composeTestRule.onNodeWithText("Músico y compositor británico, miembro de The Beatles", substring = true)
             .assertExists()
-        
+
         // Verificar que la sección de álbumes está presente
         // Usar el primer nodo (el del detalle del artista), no el tab de navegación
         composeTestRule.onAllNodesWithText("Álbumes", substring = true)[0]
             .assertExists()
-        
+
         // Capturar screenshot del detalle del artista validado
         screenshotTestRule.takeScreenshot("03-detalle-artista-validado")
-        
+
         // Esperar un poco para que el rol se propague y el botón sea visible
         Thread.sleep(1500)
         composeTestRule.waitForIdle()
-        
+
         // Hacer clic en el botón PLUS de la sección de álbumes en el detalle del artista
         // El botón tiene contentDescription "Agregar álbum" y está en la sección de álbumes
-        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithContentDescription("Agregar álbum")
                     .fetchSemanticsNodes().isNotEmpty()
@@ -246,18 +260,18 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.onNodeWithContentDescription("Agregar álbum")
             .assertIsDisplayed()
             .performClick()
-        
+
         composeTestRule.waitForIdle()
-        
+
         // Capturar screenshot de la pantalla de seleccionar álbum
         screenshotTestRule.takeScreenshot("04-seleccionar-album")
-        
+
         // Verificar que estamos en la pantalla de seleccionar álbum
         composeTestRule.onNodeWithText("Agregar Álbum", substring = true)
             .assertIsDisplayed()
-        
+
         // Esperar a que la lista de álbumes se cargue
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithText(albumToAssociate.name, substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -265,35 +279,35 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        
+
         // Seleccionar un álbum de la lista
         composeTestRule.onNodeWithText(albumToAssociate.name, substring = true)
             .assertIsDisplayed()
             .performClick()
-        
+
         composeTestRule.waitForIdle()
-        
+
         // Capturar screenshot con álbum seleccionado
         screenshotTestRule.takeScreenshot("05-album-seleccionado")
-        
+
         // Hacer clic en el botón "Agregar Álbum Seleccionado"
         composeTestRule.onNodeWithText("Agregar Álbum Seleccionado", substring = true)
             .assertIsDisplayed()
             .performClick()
-        
+
         // Esperar a que se complete la asociación
         // El ViewModel hace: POST para asociar -> luego GET para refrescar el detalle
         // El SelectAlbumToArtistScreen espera 500ms antes de navegar de vuelta
         composeTestRule.waitForIdle()
-        
+
         // Esperar a que se complete el refresh del detalle (puede tardar un poco)
         // El refreshMusicianDetail se ejecuta después del POST exitoso
-        Thread.sleep(2000)
+        Thread.sleep(1000)
         composeTestRule.waitForIdle()
-        
+
         // Verificar que volvimos al detalle del artista
         // Esto puede tardar porque el SelectAlbumToArtistScreen espera 500ms antes de navegar
-        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon")
                     .fetchSemanticsNodes().isNotEmpty()
@@ -301,14 +315,14 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        
+
         // Verificar que el artista sigue visible (confirmando que volvimos al detalle)
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
-        
+
         // Esperar a que el detalle se refresque completamente con el nuevo álbum
         // El refreshMusicianDetail ya se ejecutó, pero puede tardar en actualizar la UI
         // Esperamos a que el álbum aparezca en la sección de álbumes
-        composeTestRule.waitUntil(timeoutMillis = 15_000) {
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
             try {
                 // Buscar el álbum en la sección de álbumes del detalle
                 composeTestRule.onAllNodesWithText(albumToAssociate.name, substring = true)
@@ -317,11 +331,14 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        
+
         // Verificar que el álbum asociado está visible en la sección de álbumes del artista
-        composeTestRule.onNodeWithText(albumToAssociate.name, substring = true)
-            .assertExists()
-        
+        // Usar onAllNodesWithText porque puede haber múltiples instancias (en lista y en detalle)
+        val albumNodes = composeTestRule.onAllNodesWithText(albumToAssociate.name, substring = true)
+        assert(albumNodes.fetchSemanticsNodes().isNotEmpty()) {
+            "El álbum ${albumToAssociate.name} debería estar visible en la sección de álbumes del artista"
+        }
+
         // Capturar screenshot final con el álbum asociado visible en el detalle
         screenshotTestRule.takeScreenshot("06-album-asociado-visible")
     }
@@ -382,7 +399,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Esperar a que la lista de artistas se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -397,7 +414,7 @@ class AssociateAlbumToArtistE2ETest {
             .performClick()
         
         // Esperar a que cargue el detalle del artista
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon")
                     .fetchSemanticsNodes().isNotEmpty()
@@ -418,7 +435,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Hacer clic en el botón PLUS de la sección de álbumes en el detalle del artista
-        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithContentDescription("Agregar álbum")
                     .fetchSemanticsNodes().isNotEmpty()
@@ -433,7 +450,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Esperar a que la lista de álbumes se cargue en la pantalla de selección
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
             try {
                 composeTestRule.onAllNodesWithText(testAlbums.first().name, substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -456,7 +473,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Verificar que se muestra un mensaje de error
-        composeTestRule.waitUntil(timeoutMillis = 3_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             composeTestRule.onAllNodesWithText("Error", substring = true)
                 .fetchSemanticsNodes().isNotEmpty()
         }
@@ -517,7 +534,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Esperar a que la lista de artistas se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -532,7 +549,7 @@ class AssociateAlbumToArtistE2ETest {
             .performClick()
         
         // Esperar a que cargue el detalle del artista
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon")
                     .fetchSemanticsNodes().isNotEmpty()
@@ -553,7 +570,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Hacer clic en el botón PLUS de la sección de álbumes en el detalle del artista
-        composeTestRule.waitUntil(timeoutMillis = 10_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithContentDescription("Agregar álbum")
                     .fetchSemanticsNodes().isNotEmpty()
@@ -568,7 +585,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Verificar que la barra de búsqueda está visible
-        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+        composeTestRule.waitUntil(timeoutMillis = 2_000) {
             try {
                 composeTestRule.onAllNodesWithText("Buscar álbum...", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -586,7 +603,7 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.waitForIdle()
         
         // Verificar que se filtra la lista
-        composeTestRule.waitUntil(timeoutMillis = 3_000) {
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
                 composeTestRule.onAllNodesWithText("Abbey Road", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -594,8 +611,14 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        composeTestRule.onNodeWithText("Abbey Road", substring = true)
-            .assertIsDisplayed()
+        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+            try {
+                composeTestRule.onNodeWithText("Abbey Road", substring = true)
+                    .isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
+        }
         
         // Capturar screenshot de la búsqueda
         screenshotTestRule.takeScreenshot("buscar-album")
