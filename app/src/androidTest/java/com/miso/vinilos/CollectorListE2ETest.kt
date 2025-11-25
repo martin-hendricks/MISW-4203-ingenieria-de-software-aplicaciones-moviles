@@ -18,7 +18,7 @@ import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.rules.TestDispatcherRule
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.theme.VinilosTheme
-import kotlinx.coroutines.test.runTest
+// import kotlinx.coroutines.test.runTest // No necesario con TestDispatcherRule
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
@@ -90,7 +90,7 @@ class CollectorListE2ETest {
      * Verifica que los coleccionistas se muestran correctamente cuando el API retorna datos
      */
     @Test
-    fun testSuccessfulCollectorListLoading() = runTest {
+    fun testSuccessfulCollectorListLoading() {
         // Arrange
         val testCollectors = TestDataFactory.createTestCollectors()
         mockWebServerRule.server.enqueue(
@@ -149,7 +149,7 @@ class CollectorListE2ETest {
      * Verifica que el indicador de carga aparece mientras se obtienen los datos
      */
     @Test
-    fun testLoadingStateDisplay() = runTest {
+    fun testLoadingStateDisplay() {
         // Arrange - Configurar respuesta con delay para simular carga lenta
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createTimeoutResponse()
@@ -190,7 +190,7 @@ class CollectorListE2ETest {
      * Verifica que el mensaje de error y botón de reintento aparecen cuando el API falla
      */
     @Test
-    fun testErrorStateDisplay() = runTest {
+    fun testErrorStateDisplay() {
         // Arrange
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createServerErrorResponse()
@@ -236,7 +236,7 @@ class CollectorListE2ETest {
      * Verifica que el botón de reintento recarga los coleccionistas después de un error
      */
     @Test
-    fun testErrorRetryFunctionality() = runTest {
+    fun testErrorRetryFunctionality() {
         // Arrange - Primero error, luego éxito
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createServerErrorResponse()
@@ -291,7 +291,7 @@ class CollectorListE2ETest {
      * Verifica el comportamiento cuando el API retorna una lista vacía
      */
     @Test
-    fun testEmptyListHandling() = runTest {
+    fun testEmptyListHandling() {
         // Arrange
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createEmptyCollectorsResponse()
@@ -345,7 +345,7 @@ class CollectorListE2ETest {
      * Verifica que el nombre y email de los coleccionistas se muestran correctamente
      */
     @Test
-    fun testCollectorItemDisplay() = runTest {
+    fun testCollectorItemDisplay() {
         // Arrange
         val testCollectors = TestDataFactory.createTestCollectors()
         mockWebServerRule.server.enqueue(
@@ -394,7 +394,7 @@ class CollectorListE2ETest {
      * Verifica que la barra de navegación inferior está presente
      */
     @Test
-    fun testNavigationBarPresent() = runTest {
+    fun testNavigationBarPresent() {
         // Arrange
         val testCollectors = TestDataFactory.createTestCollectors()
         mockWebServerRule.server.enqueue(
@@ -473,7 +473,7 @@ class CollectorListE2ETest {
      * Verifica que la lista se desplaza correctamente con múltiples coleccionistas
      */
     @Test
-    fun testCollectorListScrolling() = runTest {
+    fun testCollectorListScrolling() {
         // Arrange
         val testCollectors = TestDataFactory.createTestCollectors()
         mockWebServerRule.server.enqueue(
