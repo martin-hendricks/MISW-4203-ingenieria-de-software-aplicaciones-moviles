@@ -254,26 +254,52 @@ class CreateAlbumE2ETest {
         composeTestRule.onNodeWithText("Descripción", substring = true)
             .performTextInput("Descripción del nuevo álbum")
         
-        // Campo: Género - hacer clic para abrir el dropdown
-        composeTestRule.onNodeWithText("Género", substring = true)
+        // Campo: Género - hacer clic en la flecha para abrir el dropdown
+        // Buscar el ícono con contentDescription "Mostrar" para abrir el género dropdown
+        composeTestRule.onAllNodesWithContentDescription("Mostrar", useUnmergedTree = true)[0]
             .performClick()
-        
-        composeTestRule.waitForIdle()
-        
-        // Seleccionar un género (ROCK)
-        composeTestRule.onNodeWithText(Genre.ROCK.displayName)
+
+        // Esperar a que el dropdown se abra y los elementos estén disponibles
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            try {
+                composeTestRule.onAllNodesWithText(Genre.ROCK.displayName, useUnmergedTree = true)
+                    .fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        // Pequeño delay para que la animación del dropdown termine
+        Thread.sleep(500)
+
+        // Seleccionar un género (ROCK) - usar assertIsDisplayed para asegurar que sea clickeable
+        composeTestRule.onNodeWithText(Genre.ROCK.displayName, useUnmergedTree = true)
+            .assertIsDisplayed()
             .performClick()
-        
+
         composeTestRule.waitForIdle()
-        
-        // Campo: Sello Discográfico - hacer clic para abrir el dropdown
-        composeTestRule.onNodeWithText("Sello Discográfico", substring = true)
+
+        // Campo: Sello Discográfico - hacer clic en la flecha para abrir el dropdown
+        // Buscar el segundo ícono con contentDescription "Mostrar" para abrir el sello discográfico dropdown
+        composeTestRule.onAllNodesWithContentDescription("Mostrar", useUnmergedTree = true)[1]
             .performClick()
-        
-        composeTestRule.waitForIdle()
-        
-        // Seleccionar un sello discográfico (SONY)
-        composeTestRule.onNodeWithText(RecordLabel.SONY.displayName)
+
+        // Esperar a que el dropdown se abra y los elementos estén disponibles
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            try {
+                composeTestRule.onAllNodesWithText(RecordLabel.SONY.displayName, useUnmergedTree = true)
+                    .fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        // Pequeño delay para que la animación del dropdown termine
+        Thread.sleep(500)
+
+        // Seleccionar un sello discográfico (SONY) - usar assertIsDisplayed para asegurar que sea clickeable
+        composeTestRule.onNodeWithText(RecordLabel.SONY.displayName, useUnmergedTree = true)
+            .assertIsDisplayed()
             .performClick()
         
         composeTestRule.waitForIdle()
@@ -325,6 +351,9 @@ class CreateAlbumE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
         // Respuesta de error al crear
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createServerErrorResponse()
@@ -346,7 +375,6 @@ class CreateAlbumE2ETest {
 
         composeTestRule.waitForIdle()
         
-        // Esperar a que los álbumes se carguen completamente antes de verificar
         // Seguir el mismo patrón que el test principal
         composeTestRule.waitUntil(timeoutMillis = 5_000) {
             try {
@@ -386,34 +414,87 @@ class CreateAlbumE2ETest {
         
         composeTestRule.onNodeWithText("URL de la Portada", substring = true)
             .performTextInput("https://example.com/portada.jpg")
-        
+
+        // Campo: Fecha - hacer clic en el campo de fecha para abrir el date picker
+        composeTestRule.onNodeWithText("Fecha de Lanzamiento", substring = true)
+            .performClick()
+
+        composeTestRule.waitForIdle()
+
+        // Intentar interactuar con el date picker dialog
+        try {
+            // Buscar el botón de confirmar/OK en el date picker
+            composeTestRule.onNodeWithText("OK", substring = true, useUnmergedTree = true)
+                .performClick()
+        } catch (e: AssertionError) {
+            // Si no se encuentra el botón OK, intentar con otros textos comunes
+            try {
+                composeTestRule.onNodeWithContentDescription("Confirmar", useUnmergedTree = true)
+                    .performClick()
+            } catch (e2: AssertionError) {
+                // Si no se puede interactuar con el date picker, continuar
+            }
+        }
+
+        composeTestRule.waitForIdle()
+
         composeTestRule.onNodeWithText("Descripción", substring = true)
             .performTextInput("Descripción de prueba")
-        
-        // Seleccionar género
-        composeTestRule.onNodeWithText("Género", substring = true)
+
+        // Seleccionar género - hacer clic en la flecha para abrir el dropdown
+        composeTestRule.onAllNodesWithContentDescription("Mostrar", useUnmergedTree = true)[0]
             .performClick()
+
+        // Esperar a que el dropdown se abra y los elementos estén disponibles
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            try {
+                composeTestRule.onAllNodesWithText(Genre.ROCK.displayName, useUnmergedTree = true)
+                    .fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        // Pequeño delay para que la animación del dropdown termine
+        Thread.sleep(500)
+
+        composeTestRule.onNodeWithText(Genre.ROCK.displayName, useUnmergedTree = true)
+            .assertIsDisplayed()
+            .performClick()
+
         composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText(Genre.ROCK.displayName)
+
+        // Seleccionar sello discográfico - hacer clic en la flecha para abrir el dropdown
+        composeTestRule.onAllNodesWithContentDescription("Mostrar", useUnmergedTree = true)[1]
             .performClick()
-        composeTestRule.waitForIdle()
-        
-        // Seleccionar sello discográfico
-        composeTestRule.onNodeWithText("Sello Discográfico", substring = true)
+
+        // Esperar a que el dropdown se abra y los elementos estén disponibles
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            try {
+                composeTestRule.onAllNodesWithText(RecordLabel.SONY.displayName, useUnmergedTree = true)
+                    .fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        // Pequeño delay para que la animación del dropdown termine
+        Thread.sleep(500)
+
+        composeTestRule.onNodeWithText(RecordLabel.SONY.displayName, useUnmergedTree = true)
+            .assertIsDisplayed()
             .performClick()
-        composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText(RecordLabel.SONY.displayName)
-            .performClick()
+
         composeTestRule.waitForIdle()
         
         // Intentar crear (esto debería fallar)
-        composeTestRule.onNodeWithText("Crear", substring = true)
+        composeTestRule.onNodeWithText("Crear Álbum", substring = true)
             .performClick()
         
         composeTestRule.waitForIdle()
         
         // Verificar que se muestra un mensaje de error
-        composeTestRule.waitUntil(timeoutMillis = 3_000) {
+       composeTestRule.waitUntil(timeoutMillis = 3_000) {
             composeTestRule.onAllNodesWithText("Error", substring = true)
                 .fetchSemanticsNodes().isNotEmpty()
         }
