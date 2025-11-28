@@ -223,28 +223,45 @@ class CreateAlbumE2ETest {
         composeTestRule.onNodeWithText("URL de la Portada", substring = true)
             .performTextInput("https://example.com/nuevo-album.jpg")
         
-        // Campo: Fecha - hacer clic en el campo de fecha para abrir el date picker
-        composeTestRule.onNodeWithText("Fecha de Lanzamiento", substring = true)
+        // Campo: Fecha - hacer clic en el ÍCONO del calendario para abrir el date picker
+        composeTestRule.onNodeWithContentDescription("Calendario", useUnmergedTree = true)
             .performClick()
-        
+
         composeTestRule.waitForIdle()
-        
-        // Intentar interactuar con el date picker dialog
-        // El date picker puede aparecer como un Dialog
-        // Intentar encontrar y confirmar la fecha seleccionada
-        // Nota: La interacción exacta puede variar según la implementación del date picker
+
+        // Esperar a que el date picker se abra
+        Thread.sleep(500)
+
+        // Seleccionar una fecha en el calendario (hacer clic en un día)
         try {
-            // Buscar el botón de confirmar/OK en el date picker
+            composeTestRule.onNodeWithText("15", useUnmergedTree = true)
+                .assertIsDisplayed()
+                .performClick()
+            composeTestRule.waitForIdle()
+        } catch (e: Exception) {
+            // Si no encuentra el día 15, intentar con otro día
+            try {
+                composeTestRule.onNodeWithText("10", useUnmergedTree = true)
+                    .performClick()
+                composeTestRule.waitForIdle()
+            } catch (e2: Exception) {
+                // Continuar si no puede seleccionar
+            }
+        }
+
+        // Hacer clic en el botón OK para confirmar la fecha
+        try {
             composeTestRule.onNodeWithText("OK", substring = true, useUnmergedTree = true)
                 .performClick()
+            composeTestRule.waitForIdle()
         } catch (e: AssertionError) {
-            // Si no se encuentra el botón OK, intentar con otros textos comunes
+            // Si no se encuentra el botón OK, intentar con otros textos
             try {
                 composeTestRule.onNodeWithContentDescription("Confirmar", useUnmergedTree = true)
                     .performClick()
+                composeTestRule.waitForIdle()
             } catch (e2: AssertionError) {
-                // Si no se puede interactuar con el date picker, el test puede fallar
-                // En ese caso, se necesitaría ajustar la interacción según la implementación real
+                // Continuar si no puede confirmar
             }
         }
         
@@ -306,9 +323,13 @@ class CreateAlbumE2ETest {
         
         // Capturar screenshot del formulario lleno
         screenshotTestRule.takeScreenshot("03-formulario-llenado")
-        
+
+        // Hacer scroll hacia abajo para asegurar que el botón "Crear Álbum" esté visible
+        composeTestRule.onNodeWithText("Crear Álbum", substring = true)
+            .performScrollTo()
+
         // Hacer clic en el botón de crear
-        composeTestRule.onNodeWithText("Crear", substring = true)
+        composeTestRule.onNodeWithText("Crear Álbum", substring = true)
             .assertIsDisplayed()
             .performClick()
         
@@ -415,28 +436,48 @@ class CreateAlbumE2ETest {
         composeTestRule.onNodeWithText("URL de la Portada", substring = true)
             .performTextInput("https://example.com/portada.jpg")
 
-        // Campo: Fecha - hacer clic en el campo de fecha para abrir el date picker
-        composeTestRule.onNodeWithText("Fecha de Lanzamiento", substring = true)
+        // Campo: Fecha - hacer clic en el ÍCONO del calendario para abrir el date picker
+        composeTestRule.onNodeWithContentDescription("Calendario", useUnmergedTree = true)
             .performClick()
 
         composeTestRule.waitForIdle()
 
-        // Intentar interactuar con el date picker dialog
+        // Esperar a que el date picker se abra
+        Thread.sleep(500)
+
+        // Seleccionar una fecha en el calendario (hacer clic en un día)
+        // Seleccionar el día 15 del mes actual
         try {
-            // Buscar el botón de confirmar/OK en el date picker
+            composeTestRule.onNodeWithText("15", useUnmergedTree = true)
+                .performClick()
+            composeTestRule.waitForIdle()
+        } catch (e: Exception) {
+            // Si no encuentra el día 15, intentar con otro día
+            try {
+                composeTestRule.onNodeWithText("10", useUnmergedTree = true)
+                    .performClick()
+                composeTestRule.waitForIdle()
+            } catch (e2: Exception) {
+                // Si no puede seleccionar ningún día, continuar
+            }
+        }
+
+        // Hacer clic en el botón OK del date picker para confirmar la fecha
+        try {
             composeTestRule.onNodeWithText("OK", substring = true, useUnmergedTree = true)
                 .performClick()
+            composeTestRule.waitForIdle()
         } catch (e: AssertionError) {
             // Si no se encuentra el botón OK, intentar con otros textos comunes
             try {
                 composeTestRule.onNodeWithContentDescription("Confirmar", useUnmergedTree = true)
                     .performClick()
+                composeTestRule.waitForIdle()
             } catch (e2: AssertionError) {
                 // Si no se puede interactuar con el date picker, continuar
+                // El botón puede quedar deshabilitado si la fecha no se establece
             }
         }
-
-        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Descripción", substring = true)
             .performTextInput("Descripción de prueba")
@@ -486,11 +527,26 @@ class CreateAlbumE2ETest {
             .performClick()
 
         composeTestRule.waitForIdle()
-        
+
+        // Hacer scroll hacia abajo para asegurar que el botón "Crear Álbum" esté visible
+        try {
+            composeTestRule.onNodeWithText("Crear Álbum", substring = true)
+                .performScrollTo()
+        } catch (e: Exception) {
+            // Si no puede hacer scroll, continuar
+        }
+
+        // Esperar un momento para asegurar que el botón esté completamente renderizado
+        Thread.sleep(500)
+
         // Intentar crear (esto debería fallar)
+        // Verificar que el botón existe y está habilitado
         composeTestRule.onNodeWithText("Crear Álbum", substring = true)
+            .assertExists("El botón 'Crear Álbum' no existe")
+            .assertIsDisplayed()
+            .assertIsEnabled()
             .performClick()
-        
+
         composeTestRule.waitForIdle()
         
         // Verificar que se muestra un mensaje de error
