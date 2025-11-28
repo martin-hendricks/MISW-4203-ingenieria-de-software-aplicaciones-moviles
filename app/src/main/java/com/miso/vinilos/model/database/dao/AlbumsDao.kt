@@ -15,10 +15,10 @@ interface AlbumsDao {
 
     /**
      * Obtiene todos los álbumes de la base de datos
-     * @return Lista de todos los álbumes
+     * @return Lista de todos los álbumes o null si la tabla está vacía
      */
     @Query("SELECT * FROM albums_table")
-    fun getAlbums(): List<Album>
+    fun getAlbums(): List<Album>?
 
     /**
      * Obtiene un álbum específico por su ID

@@ -73,9 +73,10 @@ object TestDataFactory {
         performers: List<Performer>? = createTestPerformers(),
         tracks: List<Track>? = createTestTracks()
     ): Album {
-        val calendar = Calendar.getInstance()
-        calendar.set(1969, Calendar.SEPTEMBER, 26) // 26 de septiembre de 1969
-        
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        calendar.set(1969, Calendar.SEPTEMBER, 26, 0, 0, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+
         return Album(
             id = id,
             name = name,
@@ -178,8 +179,9 @@ object TestDataFactory {
         cover: String = "https://example.com/abbey-road.jpg",
         description: String = "El último álbum grabado por The Beatles"
     ): Album {
-        val calendar = Calendar.getInstance()
-        calendar.set(1969, Calendar.SEPTEMBER, 26)
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        calendar.set(1969, Calendar.SEPTEMBER, 26, 0, 0, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
 
         return Album(
             id = id,
@@ -230,8 +232,9 @@ object TestDataFactory {
         name: String = "John Lennon",
         image: String = "https://example.com/john-lennon.jpg",
         description: String = "Músico y compositor británico",
-        birthDate: Calendar = Calendar.getInstance().apply {
-            set(1940, Calendar.OCTOBER, 9)
+        birthDate: Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(1940, Calendar.OCTOBER, 9, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         },
         albums: List<Album>? = null,
         performerPrizes: List<PerformerPrize>? = null
@@ -251,14 +254,17 @@ object TestDataFactory {
      * Crea una lista de músicos de prueba
      */
     fun createTestMusicians(): List<Musician> {
-        val calendar1 = Calendar.getInstance().apply {
-            set(1940, Calendar.OCTOBER, 9)
+        val calendar1 = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(1940, Calendar.OCTOBER, 9, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         }
-        val calendar2 = Calendar.getInstance().apply {
-            set(1942, Calendar.JUNE, 18)
+        val calendar2 = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(1942, Calendar.JUNE, 18, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         }
-        val calendar3 = Calendar.getInstance().apply {
-            set(1943, Calendar.JANUARY, 9)
+        val calendar3 = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(1943, Calendar.JANUARY, 9, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         }
         
         return listOf(
@@ -298,8 +304,9 @@ object TestDataFactory {
         image: String = "https://example.com/john-lennon.jpg",
         description: String = "Músico y compositor británico, miembro de The Beatles"
     ): Musician {
-        val calendar = Calendar.getInstance().apply {
-            set(1940, Calendar.OCTOBER, 9)
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(1940, Calendar.OCTOBER, 9, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         }
         
         val prize = Prize(

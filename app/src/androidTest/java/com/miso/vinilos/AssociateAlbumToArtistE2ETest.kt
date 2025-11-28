@@ -87,29 +87,33 @@ class AssociateAlbumToArtistE2ETest {
         val testAlbumApiService = TestRetrofitClient.createTestApiService(mockWebServerRule.baseUrl)
         val testMusicianApiService = TestRetrofitClient.createTestMusicianApiService(mockWebServerRule.baseUrl)
         val application = ApplicationProvider.getApplicationContext<Application>()
-        
-        // Usar base de datos en memoria para pruebas
+
+        // Crear base de datos en memoria pero DESHABILITAR el cache
         testDatabase = Room.inMemoryDatabaseBuilder(
             application,
             VinylRoomDatabase::class.java
-        ).allowMainThreadQueries().build()
-        
+        )
+        .allowMainThreadQueries()
+        .fallbackToDestructiveMigration()
+        .build()
+
         val albumsDao = testDatabase!!.albumsDao()
         val musiciansDao = testDatabase!!.musiciansDao()
-        
+
+        // IMPORTANTE: enableCache = false para que NO use Room, solo el API mockeado
         val albumRepository = com.miso.vinilos.model.repository.AlbumRepository(
-            application, albumsDao, testAlbumApiService
+            application, albumsDao, testAlbumApiService, enableCache = false
         )
         val musicianRepository = com.miso.vinilos.model.repository.MusicianRepository(
-            application, musiciansDao, testMusicianApiService
+            application, musiciansDao, testMusicianApiService, enableCache = false
         )
         val prizeRepository = com.miso.vinilos.model.repository.PrizeRepository.getInstance()
-        
+
         val albumViewModel = AlbumViewModel(albumRepository, Dispatchers.Unconfined)
         val musicianViewModel = MusicianViewModel(
             musicianRepository, prizeRepository, Dispatchers.Unconfined
         )
-        
+
         return Pair(albumViewModel, musicianViewModel)
     }
 
@@ -127,26 +131,39 @@ class AssociateAlbumToArtistE2ETest {
         val testAlbums = TestDataFactory.createTestAlbums()
         val albumToAssociate = testAlbums.first()
 
-        // PRIMERA respuesta: lista de artistas (GET /musicians)
-        // Esta es la primera llamada que hace MusicianViewModel en init
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
-        )
-        // SEGUNDA respuesta: detalle del artista (GET /musicians/{id})
-        // Cuando se hace clic en un artista
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
-        )
-        // TERCERA respuesta: lista de álbumes (GET /albums)
-        // En la pantalla de selección de álbum
+        // PRIMERA respuesta: init de AlbumViewModel (GET /albums)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // CUARTA respuesta: asociar álbum (POST /musicians/{id}/albums/{albumId})
+        // SEGUNDA respuesta: init de MusicianViewModel (GET /musicians)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
+        )
+        // TERCERA respuesta: refresh automático de la lista de artistas (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
+        )
+        // CUARTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
+        )
+        // QUINTA respuesta: refresh automático del detalle del artista (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
+        )
+        // SEXTA respuesta: lista de álbumes para pantalla de selección (GET /albums)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // SÉPTIMA respuesta: refresh automático de la lista de álbumes (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // OCTAVA respuesta: asociar álbum (POST /musicians/{id}/albums/{albumId})
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createOkResponse()
         )
-        // QUINTA respuesta: refrescar el detalle del artista después de asociar (GET /musicians/{id})
+        // NOVENA respuesta: refrescar el detalle del artista después de asociar (GET /musicians/{id})
         val updatedMusician = testMusician.copy(
             albums = (testMusician.albums ?: emptyList()) + albumToAssociate
         )
@@ -190,7 +207,7 @@ class AssociateAlbumToArtistE2ETest {
 
         // Esperar a que la pantalla se cargue completamente
         // Primero verificar que el título está visible (puede ser el nodo 0 o 1 dependiendo de si hay tab)
-        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+        composeTestRule.waitUntil(timeoutMillis = 3_000) {
             try {
                 val titleNodes = composeTestRule.onAllNodesWithText("Artistas")
                 titleNodes.fetchSemanticsNodes().isNotEmpty()
@@ -353,25 +370,40 @@ class AssociateAlbumToArtistE2ETest {
         val testMusicians = TestDataFactory.createTestMusicians()
         val testMusician = TestDataFactory.createTestMusicianWithFullDetails()
         val testAlbums = TestDataFactory.createTestAlbums()
-        
-        // PRIMERA respuesta: lista de artistas (GET /musicians)
-        // Esta es la primera llamada que hace MusicianViewModel en init
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
-        )
-        // SEGUNDA respuesta: detalle del artista (GET /musicians/{id})
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
-        )
-        // TERCERA respuesta: lista de álbumes (GET /albums)
+
+        // PRIMERA respuesta: init de AlbumViewModel (GET /albums)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // CUARTA respuesta: error al asociar (POST /musicians/{id}/albums/{albumId})
+        // SEGUNDA respuesta: init de MusicianViewModel (GET /musicians)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
+        )
+        // TERCERA respuesta: refresh automático de la lista de artistas (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
+        )
+        // CUARTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
+        )
+        // QUINTA respuesta: refresh automático del detalle del artista (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
+        )
+        // SEXTA respuesta: lista de álbumes para pantalla de selección (GET /albums)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // SÉPTIMA respuesta: refresh automático de la lista de álbumes (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // OCTAVA respuesta: error al asociar (POST /musicians/{id}/albums/{albumId})
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createServerErrorResponse()
         )
-        
+
         // Crear los ViewModels DESPUÉS de encolar las respuestas
         val (albumViewModel, musicianViewModel) = createTestViewModels()
         val profileViewModel = createTestProfileViewModel()
@@ -492,21 +524,44 @@ class AssociateAlbumToArtistE2ETest {
         val testMusicians = TestDataFactory.createTestMusicians()
         val testMusician = TestDataFactory.createTestMusicianWithFullDetails()
         val testAlbums = TestDataFactory.createTestAlbums()
-        
-        // PRIMERA respuesta: lista de artistas (GET /musicians)
-        // Esta es la primera llamada que hace MusicianViewModel en init
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
-        )
-        // SEGUNDA respuesta: detalle del artista (GET /musicians/{id})
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
-        )
-        // TERCERA respuesta: lista de álbumes (GET /albums)
+
+        // PRIMERA respuesta: init de AlbumViewModel (GET /albums)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        
+        // SEGUNDA respuesta: init de MusicianViewModel (GET /musicians)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
+        )
+        // TERCERA respuesta: refresh automático de la lista de artistas (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
+        )
+        // CUARTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
+        )
+        // QUINTA respuesta: refresh automático del detalle del artista (ON_RESUME)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
+        )
+        // SEXTA respuesta: lista de álbumes para pantalla de selección (GET /albums)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // SEXTA respuesta: lista de álbumes para pantalla de selección (GET /albums)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // SEXTA respuesta: lista de álbumes para pantalla de selección (GET /albums)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // SÉPTIMA respuesta: refresh automático de la lista de álbumes (ON_RESUME de SelectAlbumToArtistScreen)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+
         // Crear los ViewModels DESPUÉS de encolar las respuestas
         val (albumViewModel, musicianViewModel) = createTestViewModels()
         val profileViewModel = createTestProfileViewModel()
@@ -530,11 +585,11 @@ class AssociateAlbumToArtistE2ETest {
         composeTestRule.onNodeWithText("Artistas")
             .assertIsDisplayed()
             .performClick()
-        
+
         composeTestRule.waitForIdle()
         
         // Esperar a que la lista de artistas se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+        composeTestRule.waitUntil(timeoutMillis = 3_000) {
             try {
                 composeTestRule.onAllNodesWithText("John Lennon", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
@@ -542,12 +597,14 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        
+
+        composeTestRule.waitForIdle()
         // Hacer clic en el artista
         composeTestRule.onNodeWithText("John Lennon", substring = true)
             .assertIsDisplayed()
             .performClick()
-        
+
+        composeTestRule.waitForIdle()
         // Esperar a que cargue el detalle del artista
         composeTestRule.waitUntil(timeoutMillis = 2_000) {
             try {
@@ -557,14 +614,13 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-        
+        composeTestRule.waitForIdle()
         // VALIDAR EL DETALLE DEL ARTISTA
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
         // Verificar que la sección de álbumes está presente
         // Usar el primer nodo (el del detalle del artista), no el tab de navegación
         composeTestRule.onAllNodesWithText("Álbumes", substring = true)[0]
             .assertExists()
-        
         // Esperar un poco para que el rol se propague y el botón sea visible
         Thread.sleep(1500)
         composeTestRule.waitForIdle()

@@ -22,11 +22,13 @@ import kotlinx.coroutines.withContext
  * @param application Contexto de la aplicación para acceder a recursos del sistema
  * @param albumsDao DAO para operaciones de caché local
  * @param apiService Servicio API para álbumes (inyectable para testing)
+ * @param enableCache Habilitar caché local (false para tests)
  */
 class AlbumRepository(
     private val application: Application,
     private val albumsDao: AlbumsDao,
-    private val apiService: AlbumApiService = RetrofitClient.createService()
+    private val apiService: AlbumApiService = RetrofitClient.createService(),
+    private val enableCache: Boolean = true
 ) {
 
     /**
