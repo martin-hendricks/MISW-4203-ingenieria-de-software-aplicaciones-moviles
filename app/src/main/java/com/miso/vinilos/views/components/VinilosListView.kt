@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /**
@@ -49,7 +52,12 @@ fun <T> VinilosListView(
                 text = title,
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics {
+                        // Marcar como heading para navegación de TalkBack
+                        heading()
+                    }
             )
             
             // Botón Plus (solo si onPlusClick no es null)
@@ -63,14 +71,20 @@ fun <T> VinilosListView(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Agregar"
+                        // Descripción contextual para TalkBack
+                        contentDescription = "Agregar nuevo elemento a $title"
                     )
                 }
             }
         }
         
         // Lista
-        LazyColumn {
+        LazyColumn(
+            modifier = Modifier.semantics {
+                // Descripción de la lista para TalkBack
+                contentDescription = "Lista de $title, ${items.size} elementos"
+            }
+        ) {
             items(items) { item ->
                 itemContent(item)
             }

@@ -1,6 +1,8 @@
 package com.miso.vinilos.views.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -10,6 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -143,7 +149,13 @@ private fun AlbumsList(
 @Composable
 private fun LoadingState() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics {
+                // LiveRegion para que TalkBack anuncie el estado de carga automáticamente
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = "Cargando álbumes, por favor espere"
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -172,7 +184,13 @@ private fun ErrorState(
     onRetry: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics {
+                // LiveRegion Assertive para que TalkBack anuncie errores inmediatamente
+                liveRegion = LiveRegionMode.Assertive
+                contentDescription = "Error al cargar álbumes. $message"
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -180,6 +198,13 @@ private fun ErrorState(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(24.dp)
         ) {
+            // Ícono de error para no depender solo del color
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = null, // Decorativo, el texto ya describe el error
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
             Text(
                 text = "Error al cargar álbumes",
                 style = MaterialTheme.typography.titleLarge,
@@ -190,11 +215,13 @@ private fun ErrorState(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Button(onClick = onRetry) {
-                Text(
-                    text = "Reintentar",
-                    color = Color(0xFF000000)
-                )
+            Button(
+                onClick = onRetry,
+                modifier = Modifier.semantics {
+                    contentDescription = "Botón reintentar, toque dos veces para volver a cargar los álbumes"
+                }
+            ) {
+                Text("Reintentar")
             }
         }
     }
