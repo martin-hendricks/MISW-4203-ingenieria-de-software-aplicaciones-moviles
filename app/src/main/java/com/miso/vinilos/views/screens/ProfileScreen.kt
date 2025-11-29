@@ -34,14 +34,7 @@ fun ProfileScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Título
-        Text(
-            text = "Perfil",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
+        // Título eliminado para evitar redundancia con el menú de navegación inferior
         Text(
             text = "Selecciona tu rol",
             style = MaterialTheme.typography.bodyLarge,

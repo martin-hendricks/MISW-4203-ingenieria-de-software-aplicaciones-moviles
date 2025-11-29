@@ -125,7 +125,7 @@ private fun AlbumsList(
     onAddAlbum: () -> Unit
 ) {
     VinilosListView(
-        title = "Álbumes",
+        title = "", // Título vacío para evitar redundancia con el menú de navegación inferior
         items = albums,
         // Solo muestra el botón de agregar si el usuario es coleccionista
         onPlusClick = if (userRole == UserRole.COLLECTOR) {

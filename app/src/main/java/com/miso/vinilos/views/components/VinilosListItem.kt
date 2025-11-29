@@ -168,7 +168,7 @@ fun ImagePlaceholder(
             Text(
                 text = initials.uppercase().take(2),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color.White, // Color blanco para mejor contraste de accesibilidad
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
         } else {
@@ -176,7 +176,7 @@ fun ImagePlaceholder(
             Icon(
                 imageVector = Icons.Default.BrokenImage,
                 contentDescription = "Imagen no disponible",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                tint = Color.White.copy(alpha = 0.7f), // Color blanco para mejor contraste de accesibilidad
                 modifier = Modifier.size(32.dp)
             )
         }
