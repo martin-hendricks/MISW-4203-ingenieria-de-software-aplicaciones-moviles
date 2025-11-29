@@ -134,28 +134,6 @@ class AssociateAlbumToArtistE2ETest {
         val testAlbums = TestDataFactory.createTestAlbums()
         val albumToAssociate = testAlbums.first()
 
-        // Agregar logging para ver qué requests se están haciendo
-        var requestCount = 0
-
-        // Usar un dispatcher personalizado que loguea cada request
-        val loggingDispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse {
-                requestCount++
-                val method = request.method
-                val path = request.path
-                android.util.Log.d("TEST_REQUEST", "Request #$requestCount: $method $path")
-                println("TEST_REQUEST #$requestCount: $method $path")
-
-                // Obtener la siguiente respuesta de la cola
-                return mockWebServerRule.server.takeRequest().let {
-                    // Este takeRequest ya consumió la request, ahora devolvemos la respuesta
-                    // No podemos usar takeRequest aquí porque ya estamos en dispatch
-                    // En su lugar, retornamos un MockResponse vacío y dejamos que el servidor use las respuestas encoladas
-                    MockResponse().setResponseCode(500) // Placeholder - el servidor usará las respuestas encoladas
-                }
-            }
-        }
-
         // PRIMERA respuesta: init de AlbumViewModel (GET /albums)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
@@ -168,31 +146,23 @@ class AssociateAlbumToArtistE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // CUARTA respuesta: refresh automático de la lista de artistas cuando se navega (ON_RESUME ArtistListScreen)
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
-        )
-        // QUINTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
+        // CUARTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusicianSuccessResponse(testMusician)
         )
-        // SEXTA respuesta: posible refresh del detalle del artista
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
-        )
-        // SÉPTIMA respuesta: lista de álbumes para pantalla de selección (GET /albums)
+        // QUINTA respuesta: lista de álbumes para pantalla de selección (GET /albums)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // OCTAVA respuesta: refresh automático de la lista de álbumes en selección (ON_RESUME AlbumSelectionScreen)
+        // SEXTA respuesta: refresh automático de la lista de álbumes en selección (ON_RESUME AlbumSelectionScreen)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // NOVENA respuesta: asociar álbum (POST /musicians/{id}/albums/{albumId})
+        // SÉPTIMA respuesta: asociar álbum (POST /musicians/{id}/albums/{albumId})
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createOkResponse()
         )
-        // DÉCIMA respuesta: refrescar el detalle del artista después de asociar (GET /musicians/{id})
+        // OCTAVA respuesta: refrescar el detalle del artista después de asociar (GET /musicians/{id})
         val updatedMusician = testMusician.copy(
             albums = (testMusician.albums ?: emptyList()) + albumToAssociate
         )
@@ -259,6 +229,18 @@ class AssociateAlbumToArtistE2ETest {
         // Pequeña pausa para asegurar que la UI está completamente estable
         Thread.sleep(300)
 
+        // Verificar qué requests se han hecho hasta ahora
+        println("=== VERIFICANDO REQUESTS CONSUMIDOS ===")
+        val request1 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
+        val request2 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
+        val request3 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
+        val request4 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
+        println("Request 1: ${request1?.method} ${request1?.path}")
+        println("Request 2: ${request2?.method} ${request2?.path}")
+        println("Request 3: ${request3?.method} ${request3?.path}")
+        println("Request 4: ${request4?.method} ${request4?.path}")
+        println("=== FIN VERIFICACIÓN ===")
+
         // Capturar screenshot de la lista de artistas
         screenshotTestRule.takeScreenshot("02-lista-artistas")
 
@@ -323,7 +305,7 @@ class AssociateAlbumToArtistE2ETest {
         // Esperar a que la lista de álbumes se cargue
         composeTestRule.waitUntil(timeoutMillis = 1_000) {
             try {
-                composeTestRule.onAllNodesWithText(albumToAssociate.name, substring = true)
+                composeTestRule.onAllNodesWithText("Wish You", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
             } catch (e: Exception) {
                 false
@@ -331,7 +313,7 @@ class AssociateAlbumToArtistE2ETest {
         }
 
         // Seleccionar un álbum de la lista
-        composeTestRule.onNodeWithText(albumToAssociate.name, substring = true)
+        composeTestRule.onNodeWithText("Wish You", substring = true)
             .assertIsDisplayed()
             .performClick()
 
@@ -340,10 +322,15 @@ class AssociateAlbumToArtistE2ETest {
         // Capturar screenshot con álbum seleccionado
         screenshotTestRule.takeScreenshot("05-album-seleccionado")
 
+        println("=== ANTES DE CLIC EN AGREGAR ÁLBUM SELECCIONADO ===")
+
         // Hacer clic en el botón "Agregar Álbum Seleccionado"
         composeTestRule.onNodeWithText("Agregar Álbum Seleccionado", substring = true)
             .assertIsDisplayed()
+            .assertIsEnabled()
             .performClick()
+
+        println("=== DESPUÉS DE CLIC EN AGREGAR ÁLBUM SELECCIONADO ===")
 
         // Esperar a que se complete la asociación
         // El ViewModel hace: POST para asociar -> luego GET para refrescar el detalle
@@ -354,6 +341,17 @@ class AssociateAlbumToArtistE2ETest {
         // El refreshMusicianDetail se ejecuta después del POST exitoso
         Thread.sleep(1000)
         composeTestRule.waitForIdle()
+
+        // Verificar qué requests se hicieron después del clic
+        println("=== VERIFICANDO REQUESTS ADICIONALES ===")
+        var requestNum = 5
+        while (true) {
+            val request = mockWebServerRule.server.takeRequest(100, java.util.concurrent.TimeUnit.MILLISECONDS)
+            if (request == null) break
+            println("Request #$requestNum: ${request.method} ${request.path}")
+            requestNum++
+        }
+        println("=== FIN VERIFICACIÓN ADICIONAL ===")
 
         // Verificar que volvimos al detalle del artista
         // Esto puede tardar porque el SelectAlbumToArtistScreen espera 500ms antes de navegar
