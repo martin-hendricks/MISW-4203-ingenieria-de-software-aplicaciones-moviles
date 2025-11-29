@@ -1,5 +1,6 @@
 package com.miso.vinilos.views.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -56,6 +57,7 @@ fun CreateAlbumScreen(
     }
 
     Scaffold(
+        containerColor = DarkGreen, // Fondo explícito con buen contraste
         topBar = {
             // Barra superior personalizada con componentes estables
             Row(
@@ -100,7 +102,10 @@ fun CreateAlbumScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         CircularProgressIndicator()
-                        Text("Creando álbum...")
+                        Text(
+                            text = "Creando álbum...",
+                            color = Color.White // Color explícito para buen contraste
+                        )
                     }
                 }
             }
@@ -145,6 +150,7 @@ private fun CreateAlbumForm(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(DarkGreen) // Fondo explícito para asegurar buen contraste
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -491,12 +497,18 @@ private fun CreateAlbumForm(
                     )
                     
                     // DatePicker con altura fija para evitar recorte
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 400.dp)
+                    // Usar minimumInteractiveComponentSize para asegurar que los elementos clicables
+                    // (como las flechas de cambio de mes) tengan al menos 48dp según recomendaciones de accesibilidad
+                    CompositionLocalProvider(
+                        LocalMinimumInteractiveComponentSize provides 48.dp
                     ) {
-                        DatePicker(state = datePickerState)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp)
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
                     }
                     
                     // Botones
