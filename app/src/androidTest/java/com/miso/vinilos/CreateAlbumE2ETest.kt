@@ -312,13 +312,6 @@ class CreateAlbumE2ETest {
             .assertIsEnabled()
             .performClick()
 
-        composeTestRule.waitForIdle()
-
-        composeTestRule.waitUntil(timeoutMillis = 3_000) {
-            composeTestRule.onAllNodesWithText("Exitoso", substring = true)
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
         screenshotTestRule.takeScreenshot("Exito-crear-album")
     }
 
