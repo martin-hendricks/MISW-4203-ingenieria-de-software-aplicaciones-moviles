@@ -162,13 +162,7 @@ class AssociateAlbumToArtistE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createOkResponse()
         )
-        // OCTAVA respuesta: refrescar el detalle del artista después de asociar (GET /musicians/{id})
-        val updatedMusician = testMusician.copy(
-            albums = (testMusician.albums ?: emptyList()) + albumToAssociate
-        )
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusicianSuccessResponse(updatedMusician)
-        )
+
 
         // Crear los ViewModels DESPUÉS de encolar las respuestas
         // El MusicianViewModel cargará automáticamente y usará la primera respuesta
