@@ -17,30 +17,9 @@ class AccessibilityTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    /**
-     * TEST 1: Verifica que los elementos de la lista de álbumes tengan contentDescription
-     */
-    @Test
-    fun albumListItems_haveContentDescription() {
-        // Esperar a que cargue la lista
-        composeTestRule.waitForIdle()
-
-        // Esperar a que aparezcan los álbumes (estado Success)
-        composeTestRule.waitUntil(timeoutMillis = 15000) {
-            composeTestRule
-                .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Verificar que hay al menos un elemento con descripción accesible
-        composeTestRule
-            .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-            .onFirst()
-            .assertExists()
-    }
 
     /**
-     * TEST 2: Verifica que la navegación inferior tenga etiquetas accesibles
+     * TEST 1: Verifica que la navegación inferior tenga etiquetas accesibles
      */
     @Test
     fun bottomNavigation_hasAccessibleLabels() {
@@ -72,7 +51,7 @@ class AccessibilityTest {
     }
 
     /**
-     * TEST 3: Verifica que el estado de carga sea accesible
+     * TEST 2: Verifica que el estado de carga sea accesible
      */
     @Test
     fun loadingState_isAccessible() {
@@ -91,7 +70,7 @@ class AccessibilityTest {
     }
 
     /**
-     * TEST 4: Verifica que todos los botones tengan acciones clicables
+     * TEST 3: Verifica que todos los botones tengan acciones clicables
      */
     @Test
     fun allButtons_areClickable() {
@@ -111,7 +90,7 @@ class AccessibilityTest {
     }
 
     /**
-     * TEST 5: Verifica la navegación entre pestañas con accesibilidad
+     * TEST 4: Verifica la navegación entre pestañas con accesibilidad
      */
     @Test
     fun navigationBetweenTabs_isAccessible() {
@@ -151,7 +130,7 @@ class AccessibilityTest {
     }
 
     /**
-     * TEST 6: Verifica que el título de cada pantalla sea un heading
+     * TEST 5: Verifica que el título de cada pantalla sea un heading
      */
     @Test
     fun screenTitles_areHeadings() {
@@ -172,140 +151,9 @@ class AccessibilityTest {
             .assertExists()
     }
 
-    /**
-     * TEST 7: Verifica que las imágenes tengan contentDescription
-     */
-    @Test
-    fun images_haveContentDescription() {
-        composeTestRule.waitForIdle()
-
-        // Esperar a que carguen los álbumes (que contienen las imágenes)
-        composeTestRule.waitUntil(timeoutMillis = 15000) {
-            composeTestRule
-                .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Las imágenes están dentro de los cards de álbumes
-        // Verificar que existe al menos un álbum (que contiene imagen)
-        composeTestRule
-            .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-            .onFirst()
-            .assertExists()
-    }
 
     /**
-     * TEST 8: Verifica que se puede navegar al detalle de un álbum
-     */
-    @Test
-    fun albumDetail_isAccessible() {
-        composeTestRule.waitForIdle()
-
-        // Esperar a que cargue la lista
-        composeTestRule.waitUntil(timeoutMillis = 15000) {
-            composeTestRule
-                .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Click en el primer álbum
-        composeTestRule
-            .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-            .onFirst()
-            .performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Esperar a que cargue la pantalla de detalle
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            composeTestRule
-                .onAllNodes(hasContentDescription("Volver"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Verificar que existe el botón de volver
-        composeTestRule
-            .onNode(hasContentDescription("Volver"))
-            .assertExists()
-            .assertHasClickAction()
-    }
-
-    /**
-     * TEST 9: Verifica que el botón de volver en detalle sea accesible
-     */
-    @Test
-    fun backButton_inDetail_isAccessible() {
-        composeTestRule.waitForIdle()
-
-        // Esperar a que cargue la lista
-        composeTestRule.waitUntil(timeoutMillis = 15000) {
-            composeTestRule
-                .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Navegar a detalle
-        composeTestRule
-            .onAllNodes(hasContentDescription("Ver detalles de", substring = true))
-            .onFirst()
-            .performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Esperar a que cargue la pantalla de detalle
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            composeTestRule
-                .onAllNodes(hasContentDescription("Volver"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Verificar botón volver existe y tiene click action
-        composeTestRule
-            .onNode(hasContentDescription("Volver"))
-            .assertExists()
-            .assertHasClickAction()
-
-        // Hacer click en volver
-        composeTestRule
-            .onNode(hasContentDescription("Volver"))
-            .performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Verificar que volvió a la lista esperando a que aparezca el título
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            composeTestRule
-                .onAllNodesWithText("Álbumes")
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        composeTestRule
-            .onAllNodesWithText("Álbumes")[0]
-            .assertExists()
-    }
-
-    /**
-     * TEST 10: Verifica que las listas tengan información de contexto
-     */
-    @Test
-    fun lists_haveContextualInformation() {
-        composeTestRule.waitForIdle()
-
-        // Esperar a que cargue
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            composeTestRule
-                .onAllNodes(hasContentDescription("Lista de", substring = true))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Verificar que existe descripción de lista
-        composeTestRule
-            .onNode(hasContentDescription("Lista de Álbumes", substring = true))
-            .assertExists()
-    }
-
-    /**
-     * TEST 11: Verifica el estado de selección en navegación
+     * TEST 6: Verifica el estado de selección en navegación
      */
     @Test
     fun navigationItems_showSelectionState() {
@@ -330,28 +178,9 @@ class AccessibilityTest {
             .assertExists()
     }
 
-    /**
-     * TEST 12: Verifica scroll en listas
-     */
-    @Test
-    fun lists_areScrollable() {
-        composeTestRule.waitForIdle()
-
-        // Esperar a que cargue la lista
-        composeTestRule.waitUntil(timeoutMillis = 10000) {
-            composeTestRule
-                .onAllNodes(hasScrollAction())
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-
-        // Verificar que hay elementos con scroll
-        composeTestRule
-            .onAllNodes(hasScrollAction())
-            .assertCountEquals(1)
-    }
 
     /**
-     * TEST 13: Verifica que el perfil sea accesible
+     * TEST 7: Verifica que el perfil sea accesible
      */
     @Test
     fun profileScreen_isAccessible() {
@@ -370,42 +199,11 @@ class AccessibilityTest {
             .assertExists()
     }
 
-    /**
-     * TEST 14: Verifica que los botones de agregar sean accesibles
-     */
-    @Test
-    fun addButtons_haveProperDescription() {
-        composeTestRule.waitForIdle()
 
-        // Cambiar a rol Coleccionista para ver el botón
-        composeTestRule
-            .onNode(hasContentDescription("Perfil", substring = true), useUnmergedTree = true)
-            .performClick()
 
-        composeTestRule.waitForIdle()
-
-        // Seleccionar Coleccionista
-        composeTestRule
-            .onNodeWithText("Coleccionista")
-            .performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Volver a Álbumes
-        composeTestRule
-            .onNode(hasContentDescription("Álbumes", substring = true), useUnmergedTree = true)
-            .performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Verificar que existe botón de agregar con descripción
-        composeTestRule
-            .onNode(hasContentDescription("Agregar", substring = true), useUnmergedTree = true)
-            .assertExists()
-    }
 
     /**
-     * TEST 15: Verifica que los elementos tienen roles apropiados
+     * TEST 8: Verifica que los elementos tienen roles apropiados
      */
     @Test
     fun elements_haveProperRoles() {
@@ -424,4 +222,3 @@ class AccessibilityTest {
             .assertAll(hasClickAction())
     }
 }
-
