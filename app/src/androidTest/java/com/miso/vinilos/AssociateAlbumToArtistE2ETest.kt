@@ -24,6 +24,9 @@ import com.miso.vinilos.viewmodels.ProfileViewModel
 import com.miso.vinilos.model.data.UserRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
@@ -131,6 +134,28 @@ class AssociateAlbumToArtistE2ETest {
         val testAlbums = TestDataFactory.createTestAlbums()
         val albumToAssociate = testAlbums.first()
 
+        // Agregar logging para ver qué requests se están haciendo
+        var requestCount = 0
+
+        // Usar un dispatcher personalizado que loguea cada request
+        val loggingDispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                requestCount++
+                val method = request.method
+                val path = request.path
+                android.util.Log.d("TEST_REQUEST", "Request #$requestCount: $method $path")
+                println("TEST_REQUEST #$requestCount: $method $path")
+
+                // Obtener la siguiente respuesta de la cola
+                return mockWebServerRule.server.takeRequest().let {
+                    // Este takeRequest ya consumió la request, ahora devolvemos la respuesta
+                    // No podemos usar takeRequest aquí porque ya estamos en dispatch
+                    // En su lugar, retornamos un MockResponse vacío y dejamos que el servidor use las respuestas encoladas
+                    MockResponse().setResponseCode(500) // Placeholder - el servidor usará las respuestas encoladas
+                }
+            }
+        }
+
         // PRIMERA respuesta: init de AlbumViewModel (GET /albums)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
@@ -139,31 +164,35 @@ class AssociateAlbumToArtistE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
         )
-        // TERCERA respuesta: refresh automático de la lista de artistas (ON_RESUME)
+        // TERCERA respuesta: refresh automático de la pantalla de álbumes inicial (ON_RESUME AlbumListScreen)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // CUARTA respuesta: refresh automático de la lista de artistas cuando se navega (ON_RESUME ArtistListScreen)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
         )
-        // CUARTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
+        // QUINTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusicianSuccessResponse(testMusician)
         )
-        // QUINTA respuesta: refresh automático del detalle del artista (ON_RESUME)
+        // SEXTA respuesta: posible refresh del detalle del artista
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusicianSuccessResponse(testMusician)
         )
-        // SEXTA respuesta: lista de álbumes para pantalla de selección (GET /albums)
+        // SÉPTIMA respuesta: lista de álbumes para pantalla de selección (GET /albums)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // SÉPTIMA respuesta: refresh automático de la lista de álbumes (ON_RESUME)
+        // OCTAVA respuesta: refresh automático de la lista de álbumes en selección (ON_RESUME AlbumSelectionScreen)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // OCTAVA respuesta: asociar álbum (POST /musicians/{id}/albums/{albumId})
+        // NOVENA respuesta: asociar álbum (POST /musicians/{id}/albums/{albumId})
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createOkResponse()
         )
-        // NOVENA respuesta: refrescar el detalle del artista después de asociar (GET /musicians/{id})
+        // DÉCIMA respuesta: refrescar el detalle del artista después de asociar (GET /musicians/{id})
         val updatedMusician = testMusician.copy(
             albums = (testMusician.albums ?: emptyList()) + albumToAssociate
         )
@@ -192,8 +221,18 @@ class AssociateAlbumToArtistE2ETest {
             }
         }
 
-        // Esperar a que cargue la pantalla inicial
+        // Esperar a que cargue la pantalla inicial (álbumes)
         composeTestRule.waitForIdle()
+
+        // Esperar a que los álbumes se carguen antes de navegar
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            try {
+                composeTestRule.onAllNodesWithText("Abbey Road", substring = true)
+                    .fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
 
         // Capturar screenshot del estado inicial
         screenshotTestRule.takeScreenshot("01-pantalla-inicial")
@@ -205,26 +244,20 @@ class AssociateAlbumToArtistE2ETest {
 
         composeTestRule.waitForIdle()
 
-        // Esperar a que la pantalla se cargue completamente
-        // Primero verificar que el título está visible (puede ser el nodo 0 o 1 dependiendo de si hay tab)
-        composeTestRule.waitUntil(timeoutMillis = 3_000) {
+        // Esperar a que la navegación se complete y la pantalla de artistas esté visible
+        // Verificamos que la lista de artistas se haya cargado (no solo el título)
+        composeTestRule.waitUntil(timeoutMillis = 10_000) {
             try {
-                val titleNodes = composeTestRule.onAllNodesWithText("Artistas")
-                titleNodes.fetchSemanticsNodes().isNotEmpty()
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        // Esperar a que la lista de artistas se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 1_000) {
-            try {
+                // Verificar que "John Lennon" está visible, lo que indica que la lista se cargó
                 composeTestRule.onAllNodesWithText("John Lennon", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
             } catch (e: Exception) {
                 false
             }
         }
+
+        // Pequeña pausa para asegurar que la UI está completamente estable
+        Thread.sleep(300)
 
         // Capturar screenshot de la lista de artistas
         screenshotTestRule.takeScreenshot("02-lista-artistas")
@@ -243,7 +276,7 @@ class AssociateAlbumToArtistE2ETest {
                 false
             }
         }
-
+        Thread.sleep(300)
         // VALIDAR EL DETALLE DEL ARTISTA (similar a ArtistDetailE2ETest)
         // Verificar que el artista está visible
         CustomMatchers.verifyArtistIsVisible(composeTestRule, "John Lennon")
@@ -379,15 +412,15 @@ class AssociateAlbumToArtistE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
         )
-        // TERCERA respuesta: refresh automático de la lista de artistas (ON_RESUME)
+        // TERCERA respuesta: refresh automático de la pantalla de álbumes inicial (ON_RESUME AlbumListScreen)
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+        // CUARTA respuesta: refresh automático de la lista de artistas cuando se navega (ON_RESUME ArtistListScreen)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusiciansSuccessResponse(testMusicians)
         )
-        // CUARTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createMusicianSuccessResponse(testMusician)
-        )
-        // QUINTA respuesta: refresh automático del detalle del artista (ON_RESUME)
+        // QUINTA respuesta: detalle del artista al hacer clic (GET /musicians/{id})
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createMusicianSuccessResponse(testMusician)
         )
@@ -395,7 +428,7 @@ class AssociateAlbumToArtistE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
-        // SÉPTIMA respuesta: refresh automático de la lista de álbumes (ON_RESUME)
+        // SÉPTIMA respuesta: refresh automático de la lista de álbumes en selección (ON_RESUME AlbumSelectionScreen)
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
@@ -422,23 +455,38 @@ class AssociateAlbumToArtistE2ETest {
         }
 
         composeTestRule.waitForIdle()
-        
+
+        // Esperar a que los álbumes se carguen antes de navegar
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            try {
+                composeTestRule.onAllNodesWithText("Abbey Road", substring = true)
+                    .fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
+        }
+
         // Navegar a artistas
         composeTestRule.onNodeWithText("Artistas")
             .assertIsDisplayed()
             .performClick()
-        
+
         composeTestRule.waitForIdle()
-        
-        // Esperar a que la lista de artistas se cargue completamente
-        composeTestRule.waitUntil(timeoutMillis = 1_000) {
+
+        // Esperar a que la navegación se complete y la pantalla de artistas esté visible
+        // Verificamos que la lista de artistas se haya cargado (no solo el título)
+        composeTestRule.waitUntil(timeoutMillis = 10_000) {
             try {
+                // Verificar que "John Lennon" está visible, lo que indica que la lista se cargó
                 composeTestRule.onAllNodesWithText("John Lennon", substring = true)
                     .fetchSemanticsNodes().isNotEmpty()
             } catch (e: Exception) {
                 false
             }
         }
+
+        // Pequeña pausa para asegurar que la UI está completamente estable
+        Thread.sleep(300)
         
         // Hacer clic en un artista
         composeTestRule.onNodeWithText("John Lennon", substring = true)

@@ -5,18 +5,20 @@ import com.google.gson.GsonBuilder
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.Musician
 import com.miso.vinilos.model.data.Collector
+import com.miso.vinilos.model.network.DateTypeAdapter
 import okhttp3.mockwebserver.MockResponse
+import java.util.Date
 
 /**
  * Helper para crear respuestas JSON para MockWebServer
- * 
+ *
  * Proporciona métodos para convertir objetos de prueba a JSON
  * y crear respuestas HTTP mock apropiadas
  */
 object JsonResponseHelper {
-    
+
     private val gson: Gson = GsonBuilder()
-        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        .registerTypeAdapter(Date::class.java, DateTypeAdapter())
         .create()
     
     /**
