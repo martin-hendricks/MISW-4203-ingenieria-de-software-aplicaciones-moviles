@@ -15,10 +15,10 @@ interface CollectorsDao {
 
     /**
      * Obtiene todos los coleccionistas de la base de datos
-     * @return Lista de todos los coleccionistas
+     * @return Lista de todos los coleccionistas o null si la tabla está vacía
      */
     @Query("SELECT * FROM collectors_table")
-    fun getCollectors(): List<Collector>
+    fun getCollectors(): List<Collector>?
 
     /**
      * Obtiene un coleccionista específico por su ID

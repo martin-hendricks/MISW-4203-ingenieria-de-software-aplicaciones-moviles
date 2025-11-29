@@ -17,6 +17,7 @@ import com.miso.vinilos.model.database.VinylRoomDatabase
 import com.miso.vinilos.rules.MockWebServerRule
 import com.miso.vinilos.rules.ScreenshotTestRule
 import com.miso.vinilos.viewmodels.MusicianViewModel
+import com.miso.vinilos.viewmodels.ProfileViewModel
 import com.miso.vinilos.views.navigation.AppNavigation
 import com.miso.vinilos.views.screens.ArtistDetailScreen
 import com.miso.vinilos.views.theme.VinilosTheme
@@ -77,6 +78,14 @@ class ArtistDetailE2ETest {
         val testRepository = com.miso.vinilos.model.repository.MusicianRepository(application, musiciansDao, testApiService)
         val testPrizeRepository = com.miso.vinilos.model.repository.PrizeRepository.getInstance()
         return MusicianViewModel(testRepository, testPrizeRepository, Dispatchers.Unconfined)
+    }
+
+    /**
+     * Helper function to create a test ProfileViewModel
+     */
+    private fun createTestProfileViewModel(): ProfileViewModel {
+        val application = ApplicationProvider.getApplicationContext<Application>()
+        return ProfileViewModel(application)
     }
 
     /**
@@ -153,6 +162,7 @@ class ArtistDetailE2ETest {
             JsonResponseHelper.createTimeoutResponse()
         )
         val testViewModel = createTestViewModel()
+        val profileViewModel = createTestProfileViewModel()
         val musicianId = 1
 
         // Act
@@ -161,6 +171,7 @@ class ArtistDetailE2ETest {
                 ArtistDetailScreen(
                     musicianId = musicianId,
                     musicianViewModel = testViewModel,
+                    profileViewModel = profileViewModel,
                     onBack = {}
                 )
             }
@@ -184,6 +195,7 @@ class ArtistDetailE2ETest {
             JsonResponseHelper.createServerErrorResponse()
         )
         val testViewModel = createTestViewModel()
+        val profileViewModel = createTestProfileViewModel()
         val musicianId = 1
 
         // Act
@@ -192,6 +204,7 @@ class ArtistDetailE2ETest {
                 ArtistDetailScreen(
                     musicianId = musicianId,
                     musicianViewModel = testViewModel,
+                    profileViewModel = profileViewModel,
                     onBack = {}
                 )
             }
@@ -242,6 +255,7 @@ class ArtistDetailE2ETest {
             JsonResponseHelper.createMusicianSuccessResponse(testMusician)
         )
         val testViewModel = createTestViewModel()
+        val profileViewModel = createTestProfileViewModel()
         val musicianId = 1
 
         // Act
@@ -250,6 +264,7 @@ class ArtistDetailE2ETest {
                 ArtistDetailScreen(
                     musicianId = musicianId,
                     musicianViewModel = testViewModel,
+                    profileViewModel = profileViewModel,
                     onBack = {}
                 )
             }
@@ -306,6 +321,7 @@ class ArtistDetailE2ETest {
             JsonResponseHelper.createMusicianSuccessResponse(testMusician)
         )
         val testViewModel = createTestViewModel()
+        val profileViewModel = createTestProfileViewModel()
         val musicianId = 1
 
         // Act
@@ -314,6 +330,7 @@ class ArtistDetailE2ETest {
                 ArtistDetailScreen(
                     musicianId = musicianId,
                     musicianViewModel = testViewModel,
+                    profileViewModel = profileViewModel,
                     onBack = {}
                 )
             }
@@ -349,6 +366,7 @@ class ArtistDetailE2ETest {
             JsonResponseHelper.createMusicianSuccessResponse(testMusician)
         )
         val testViewModel = createTestViewModel()
+        val profileViewModel = createTestProfileViewModel()
         val musicianId = 1
         var backPressed = false
 
@@ -358,6 +376,7 @@ class ArtistDetailE2ETest {
                 ArtistDetailScreen(
                     musicianId = musicianId,
                     musicianViewModel = testViewModel,
+                    profileViewModel = profileViewModel,
                     onBack = { backPressed = true }
                 )
             }

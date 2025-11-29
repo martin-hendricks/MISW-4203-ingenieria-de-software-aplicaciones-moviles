@@ -15,10 +15,10 @@ interface CommentsDao {
 
     /**
      * Obtiene todos los comentarios de la base de datos
-     * @return Lista de todos los comentarios
+     * @return Lista de todos los comentarios o null si la tabla está vacía
      */
     @Query("SELECT * FROM comments_table")
-    fun getComments(): List<Comment>
+    fun getComments(): List<Comment>?
 
     /**
      * Obtiene un comentario específico por su ID

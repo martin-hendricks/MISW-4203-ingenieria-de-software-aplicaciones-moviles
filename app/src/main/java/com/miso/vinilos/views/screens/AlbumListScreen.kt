@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -190,7 +191,10 @@ private fun ErrorState(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Button(onClick = onRetry) {
-                Text("Reintentar")
+                Text(
+                    text = "Reintentar",
+                    color = Color(0xFF000000)
+                )
             }
         }
     }

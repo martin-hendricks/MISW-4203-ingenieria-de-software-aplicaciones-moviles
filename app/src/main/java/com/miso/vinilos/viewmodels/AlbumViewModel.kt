@@ -62,7 +62,7 @@ class AlbumViewModel(
     
     companion object {
         private const val NETWORK_TIMEOUT_MS = 30_000L // 30 segundos
-        private const val MAX_RETRY_ATTEMPTS = 3
+        private const val MAX_RETRY_ATTEMPTS = 1
         private const val RETRY_DELAY_MS = 1000L // 1 segundo
     }
 

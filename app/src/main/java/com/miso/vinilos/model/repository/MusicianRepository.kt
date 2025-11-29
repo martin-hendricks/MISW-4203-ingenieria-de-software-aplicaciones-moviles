@@ -19,11 +19,13 @@ import kotlinx.coroutines.withContext
  * @param application Contexto de la aplicación para acceder a recursos del sistema
  * @param musiciansDao DAO para operaciones de caché local
  * @param apiService Servicio API para músicos (inyectable para testing)
+ * @param enableCache Habilitar caché local (false para tests)
  */
 class MusicianRepository(
     private val application: Application,
     private val musiciansDao: MusiciansDao,
-    private val apiService: MusicianApiService = RetrofitClient.createService()
+    private val apiService: MusicianApiService = RetrofitClient.createService(),
+    private val enableCache: Boolean = true
 ) {
 
     /**
@@ -32,6 +34,20 @@ class MusicianRepository(
      * @return Result con la lista de músicos o error
      */
     suspend fun getMusicians(): Result<List<Musician>> {
+        // Si cache está deshabilitado, ir directo a red
+        if (!enableCache) {
+            return try {
+                val response = apiService.getMusicians()
+                if (response.isSuccessful && response.body() != null) {
+                    Result.success(response.body()!!)
+                } else {
+                    Result.failure(Exception("Error al obtener músicos: ${response.code()}"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
         // Intentar obtener datos del caché local (ejecutar en IO dispatcher)
         val cached = withContext(Dispatchers.IO) {
             musiciansDao.getMusicians()
