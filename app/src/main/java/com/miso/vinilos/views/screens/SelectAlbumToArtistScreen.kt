@@ -176,7 +176,7 @@ fun SelectAlbumToArtistScreen(
                             ) {
                                 if (addAlbumState is AddAlbumToMusicianUiState.Loading) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
+                                        modifier = Modifier.size(24.dp), // Mejorado: mínimo 24dp para mejor visibilidad
                                         color = Color.Black
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
