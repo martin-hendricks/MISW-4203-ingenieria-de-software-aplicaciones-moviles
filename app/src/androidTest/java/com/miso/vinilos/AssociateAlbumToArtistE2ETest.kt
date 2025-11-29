@@ -229,18 +229,6 @@ class AssociateAlbumToArtistE2ETest {
         // Pequeña pausa para asegurar que la UI está completamente estable
         Thread.sleep(300)
 
-        // Verificar qué requests se han hecho hasta ahora
-        println("=== VERIFICANDO REQUESTS CONSUMIDOS ===")
-        val request1 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
-        val request2 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
-        val request3 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
-        val request4 = mockWebServerRule.server.takeRequest(1, java.util.concurrent.TimeUnit.SECONDS)
-        println("Request 1: ${request1?.method} ${request1?.path}")
-        println("Request 2: ${request2?.method} ${request2?.path}")
-        println("Request 3: ${request3?.method} ${request3?.path}")
-        println("Request 4: ${request4?.method} ${request4?.path}")
-        println("=== FIN VERIFICACIÓN ===")
-
         // Capturar screenshot de la lista de artistas
         screenshotTestRule.takeScreenshot("02-lista-artistas")
 
@@ -341,17 +329,6 @@ class AssociateAlbumToArtistE2ETest {
         // El refreshMusicianDetail se ejecuta después del POST exitoso
         Thread.sleep(1000)
         composeTestRule.waitForIdle()
-
-        // Verificar qué requests se hicieron después del clic
-        println("=== VERIFICANDO REQUESTS ADICIONALES ===")
-        var requestNum = 5
-        while (true) {
-            val request = mockWebServerRule.server.takeRequest(100, java.util.concurrent.TimeUnit.MILLISECONDS)
-            if (request == null) break
-            println("Request #$requestNum: ${request.method} ${request.path}")
-            requestNum++
-        }
-        println("=== FIN VERIFICACIÓN ADICIONAL ===")
 
         // Verificar que volvimos al detalle del artista
         // Esto puede tardar porque el SelectAlbumToArtistScreen espera 500ms antes de navegar
