@@ -30,6 +30,9 @@ import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 /**
  * Pruebas E2E para el flujo completo de creación de álbumes
@@ -232,20 +235,32 @@ class CreateAlbumE2ETest {
         // Esperar a que el date picker se abra
         Thread.sleep(500)
 
-        // Seleccionar una fecha en el calendario (hacer clic en un día)
-        try {
-            composeTestRule.onNodeWithText("15", useUnmergedTree = true)
-                .assertIsDisplayed()
-                .performClick()
-            composeTestRule.waitForIdle()
-        } catch (e: Exception) {
-            // Si no encuentra el día 15, intentar con otro día
+        // Imprimir el árbol de nodos para debugging (el DatePicker está en el segundo root)
+        composeTestRule.onAllNodes(isRoot())[1].printToLog("DATEPICKER")
+
+        // Seleccionar una fecha en el calendario
+        // Según la documentación oficial, los días en Material 3 DatePicker usan el formato completo
+        // Por ejemplo: "Monday, November 11, 2024"
+        // Generar fechas en el formato correcto para diferentes días del mes actual
+        val calendar = Calendar.getInstance()
+        val dateFormatter = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
+        val daysToTry = listOf(11, 12, 13, 14, 16, 17, 18, 19, 20, 21)
+        var dateSelected = false
+
+        for (day in daysToTry) {
             try {
-                composeTestRule.onNodeWithText("10", useUnmergedTree = true)
+                calendar.set(Calendar.DAY_OF_MONTH, day)
+                val fullDateString = dateFormatter.format(calendar.time)
+
+                // Intentar con el formato completo de fecha
+                composeTestRule.onNodeWithText(fullDateString, useUnmergedTree = true)
                     .performClick()
                 composeTestRule.waitForIdle()
-            } catch (e2: Exception) {
-                // Continuar si no puede seleccionar
+                dateSelected = true
+                break
+            } catch (e: Exception) {
+                // Intentar con el siguiente día
+                continue
             }
         }
 
@@ -445,20 +460,32 @@ class CreateAlbumE2ETest {
         // Esperar a que el date picker se abra
         Thread.sleep(500)
 
-        // Seleccionar una fecha en el calendario (hacer clic en un día)
-        // Seleccionar el día 15 del mes actual
-        try {
-            composeTestRule.onNodeWithText("15", useUnmergedTree = true)
-                .performClick()
-            composeTestRule.waitForIdle()
-        } catch (e: Exception) {
-            // Si no encuentra el día 15, intentar con otro día
+        // Imprimir el árbol de nodos para debugging (el DatePicker está en el segundo root)
+        composeTestRule.onAllNodes(isRoot())[1].printToLog("DATEPICKER")
+
+        // Seleccionar una fecha en el calendario
+        // Según la documentación oficial, los días en Material 3 DatePicker usan el formato completo
+        // Por ejemplo: "Monday, November 11, 2024"
+        // Generar fechas en el formato correcto para diferentes días del mes actual
+        val calendar = Calendar.getInstance()
+        val dateFormatter = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
+        val daysToTry = listOf(11, 12, 13, 14, 16, 17, 18, 19, 20, 21)
+        var dateSelected = false
+
+        for (day in daysToTry) {
             try {
-                composeTestRule.onNodeWithText("10", useUnmergedTree = true)
+                calendar.set(Calendar.DAY_OF_MONTH, day)
+                val fullDateString = dateFormatter.format(calendar.time)
+
+                // Intentar con el formato completo de fecha
+                composeTestRule.onNodeWithText(fullDateString, useUnmergedTree = true)
                     .performClick()
                 composeTestRule.waitForIdle()
-            } catch (e2: Exception) {
-                // Si no puede seleccionar ningún día, continuar
+                dateSelected = true
+                break
+            } catch (e: Exception) {
+                // Intentar con el siguiente día
+                continue
             }
         }
 
