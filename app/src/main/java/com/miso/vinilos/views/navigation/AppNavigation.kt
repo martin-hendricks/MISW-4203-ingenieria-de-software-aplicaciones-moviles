@@ -14,8 +14,10 @@ import androidx.navigation.NavType
 import com.miso.vinilos.views.components.BottomNavigationBar
 import com.miso.vinilos.views.screens.AlbumListScreen
 import com.miso.vinilos.views.screens.AlbumDetailScreen
+import com.miso.vinilos.views.screens.CreateAlbumScreen
 import com.miso.vinilos.views.screens.ArtistListScreen
 import com.miso.vinilos.views.screens.ArtistDetailScreen
+import com.miso.vinilos.views.screens.SelectAlbumToArtistScreen
 import com.miso.vinilos.views.screens.CollectorListScreen
 import com.miso.vinilos.views.screens.CollectorDetailScreen
 import com.miso.vinilos.views.screens.ProfileScreen
@@ -66,6 +68,9 @@ fun AppNavigation(
                     profileViewModel = sharedProfileViewModel,
                     onAlbumClick = { album ->
                         navController.navigate(NavigationRoutes.AlbumDetail.createRoute(album.id))
+                    },
+                    onAddAlbum = {
+                        navController.navigate(NavigationRoutes.CreateAlbum.route)
                     }
                 )
             }
@@ -84,6 +89,17 @@ fun AppNavigation(
                     albumId = albumId,
                     albumViewModel = sharedAlbumViewModel,
                     onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Pantalla de Crear Álbum
+            composable(NavigationRoutes.CreateAlbum.route) {
+                val sharedAlbumViewModel = albumViewModel ?: createAlbumViewModel()
+                CreateAlbumScreen(
+                    albumViewModel = sharedAlbumViewModel,
+                    onBack = {
+                        navController.popBackStack()
+                    }
                 )
             }
 
@@ -110,6 +126,28 @@ fun AppNavigation(
                 val sharedMusicianViewModel = musicianViewModel ?: createMusicianViewModel()
                 ArtistDetailScreen(
                     musicianId = musicianId,
+                    musicianViewModel = sharedMusicianViewModel,
+                    profileViewModel = sharedProfileViewModel,
+                    onBack = { navController.popBackStack() },
+                    onAddAlbum = {
+                        navController.navigate(NavigationRoutes.SelectAlbumToArtist.createRoute(musicianId))
+                    }
+                )
+            }
+            
+            // Pantalla de Seleccionar Álbum para Artista
+            composable(
+                route = NavigationRoutes.SelectAlbumToArtist.route,
+                arguments = listOf(
+                    navArgument("musicianId") { type = NavType.IntType }
+                )
+            ) { backStackEntry ->
+                val musicianId = backStackEntry.arguments?.getInt("musicianId") ?: 0
+                val sharedAlbumViewModel = albumViewModel ?: createAlbumViewModel()
+                val sharedMusicianViewModel = musicianViewModel ?: createMusicianViewModel()
+                SelectAlbumToArtistScreen(
+                    musicianId = musicianId,
+                    albumViewModel = sharedAlbumViewModel,
                     musicianViewModel = sharedMusicianViewModel,
                     onBack = { navController.popBackStack() }
                 )

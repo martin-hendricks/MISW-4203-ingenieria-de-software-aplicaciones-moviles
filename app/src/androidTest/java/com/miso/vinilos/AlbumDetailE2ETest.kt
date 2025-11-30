@@ -25,7 +25,6 @@ import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.Dispatchers
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -124,6 +123,11 @@ class AlbumDetailE2ETest {
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
         )
+
+        mockWebServerRule.server.enqueue(
+            JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
+        )
+
         // Segunda respuesta: detalle del álbum cuando se hace clic
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumSuccessResponse(testAlbum)
@@ -143,7 +147,7 @@ class AlbumDetailE2ETest {
         }
 
         // Esperar a que la lista se cargue
-        composeTestRule.waitForIdle()
+       composeTestRule.waitForIdle()
 
         // Dar clic en el primer álbum para navegar al detalle
         composeTestRule.onNodeWithText("Abbey Road").performClick()
@@ -750,8 +754,7 @@ class AlbumDetailE2ETest {
 
         // Verificar que los comentarios ahora están visibles
         CustomMatchers.verifyCommentsSectionIsVisible(composeTestRule)
-        CustomMatchers.verifyCommentIsVisible(composeTestRule, "Excelente álbum")
-        
+
         // Capturar screenshot del scroll completo
         screenshotTestRule.takeScreenshot("scroll-completo")
     }

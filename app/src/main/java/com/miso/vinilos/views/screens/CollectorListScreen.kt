@@ -79,7 +79,7 @@ private fun CollectorsList(
     }
     
     VinilosListView(
-        title = "Coleccionistas",
+        title = "", // Título vacío para evitar redundancia con el menú de navegación inferior
         items = collectors,
         // Solo muestra el botón de agregar si el usuario es coleccionista
         onPlusClick = if (userRole == UserRole.COLLECTOR) {

@@ -28,6 +28,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -54,12 +59,28 @@ fun VinilosListItem(
     Log.d("VinilosListItem", "URL normalizada: $normalizedUrl")
     Log.d("VinilosListItem", "Cargando imagen para: $topLabel")
 
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .clickable(onClick = onClick),
+    // Descripción completa para accesibilidad
+    val accessibilityDescription = "$topLabel, $bottomLabel"
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .semantics(mergeDescendants = true) {
+                // Descripción completa para TalkBack
+                contentDescription = accessibilityDescription
+                // Definir como botón para TalkBack
+                role = Role.Button
+                // Etiqueta personalizada para la acción de click
+                onClick(label = "Ver detalles de $topLabel") {
+                    onClick()
+                    true
+                }
+            },
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
-        )) {
+        )
+    ) {
         Row (
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 16.dp),
@@ -76,6 +97,7 @@ fun VinilosListItem(
                             .diskCachePolicy(coil.request.CachePolicy.ENABLED)
                             .networkCachePolicy(coil.request.CachePolicy.ENABLED)
                             .build(),
+                        // Descripción mejorada para TalkBack
                         contentDescription = "Imagen de $topLabel",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -146,7 +168,7 @@ fun ImagePlaceholder(
             Text(
                 text = initials.uppercase().take(2),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color.White, // Color blanco para mejor contraste de accesibilidad
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
         } else {
@@ -154,7 +176,7 @@ fun ImagePlaceholder(
             Icon(
                 imageVector = Icons.Default.BrokenImage,
                 contentDescription = "Imagen no disponible",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                tint = Color.White.copy(alpha = 0.7f), // Color blanco para mejor contraste de accesibilidad
                 modifier = Modifier.size(32.dp)
             )
         }

@@ -1,12 +1,23 @@
 package com.miso.vinilos.views.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.UserRole
@@ -23,16 +34,48 @@ import com.miso.vinilos.viewmodels.ProfileViewModel
  * @param albumViewModel ViewModel que gestiona el estado de los álbumes
  * @param profileViewModel ViewModel que gestiona el perfil del usuario
  * @param onAlbumClick Callback que se ejecuta cuando se hace clic en un álbum
+ * @param onAddAlbum Callback que se ejecuta cuando se presiona el botón de agregar
  */
 @Composable
 fun AlbumListScreen(
     albumViewModel: AlbumViewModel,
     profileViewModel: ProfileViewModel,
-    onAlbumClick: (Album) -> Unit
+    onAlbumClick: (Album) -> Unit,
+    onAddAlbum: () -> Unit = {}
 ) {
     // Observa el estado de la UI desde el ViewModel
     val uiState by albumViewModel.uiState.collectAsStateWithLifecycle()
     val userRole by profileViewModel.userRole.collectAsStateWithLifecycle()
+    val createAlbumState by albumViewModel.createAlbumUiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
+    // Forzar refresh cuando la pantalla se vuelve visible (onResume)
+    // Esto asegura que siempre se obtengan los datos más recientes del servidor
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Forzar un refresh completo contra el servicio cuando se vuelve a la pantalla
+                albumViewModel.refreshAlbums()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Refrescar la lista cuando se detecta que se creó un álbum exitosamente
+    LaunchedEffect(createAlbumState) {
+        if (createAlbumState is com.miso.vinilos.viewmodels.CreateAlbumUiState.Success) {
+            // Forzar un refresh completo de la lista para mostrar el nuevo álbum
+            // Esperar un momento para asegurar que el servidor haya procesado el nuevo álbum
+            kotlinx.coroutines.delay(500)
+            albumViewModel.refreshAlbums()
+            // Esperar a que el refresh se complete antes de limpiar el estado
+            kotlinx.coroutines.delay(2000)
+            albumViewModel.clearCreateAlbumState()
+        }
+    }
     
     // Renderiza según el estado actual
     when (val currentState = uiState) {
@@ -44,9 +87,7 @@ fun AlbumListScreen(
                 albums = currentState.albums,
                 userRole = userRole,
                 onAlbumClick = onAlbumClick,
-                onAddAlbum = {
-                    // TODO: Navegar a pantalla de agregar álbum
-                }
+                onAddAlbum = onAddAlbum
             )
         }
         is AlbumUiState.Error -> {
@@ -83,7 +124,7 @@ private fun AlbumsList(
     onAddAlbum: () -> Unit
 ) {
     VinilosListView(
-        title = "Álbumes",
+        title = "", // Título vacío para evitar redundancia con el menú de navegación inferior
         items = albums,
         // Solo muestra el botón de agregar si el usuario es coleccionista
         onPlusClick = if (userRole == UserRole.COLLECTOR) {
@@ -107,7 +148,13 @@ private fun AlbumsList(
 @Composable
 private fun LoadingState() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics {
+                // LiveRegion para que TalkBack anuncie el estado de carga automáticamente
+                liveRegion = LiveRegionMode.Polite
+                contentDescription = "Cargando álbumes, por favor espere"
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -136,7 +183,13 @@ private fun ErrorState(
     onRetry: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics {
+                // LiveRegion Assertive para que TalkBack anuncie errores inmediatamente
+                liveRegion = LiveRegionMode.Assertive
+                contentDescription = "Error al cargar álbumes. $message"
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -144,6 +197,13 @@ private fun ErrorState(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(24.dp)
         ) {
+            // Ícono de error para no depender solo del color
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = null, // Decorativo, el texto ya describe el error
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
             Text(
                 text = "Error al cargar álbumes",
                 style = MaterialTheme.typography.titleLarge,
@@ -154,7 +214,12 @@ private fun ErrorState(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Button(onClick = onRetry) {
+            Button(
+                onClick = onRetry,
+                modifier = Modifier.semantics {
+                    contentDescription = "Botón reintentar, toque dos veces para volver a cargar los álbumes"
+                }
+            ) {
                 Text("Reintentar")
             }
         }

@@ -83,7 +83,7 @@ private fun ArtistsList(
     onAddArtist: () -> Unit
 ) {
     VinilosListView(
-        title = "Artistas",
+        title = "", // Título vacío para evitar redundancia con el menú de navegación inferior
         items = musicians,
         // Solo muestra el botón de agregar si el usuario es coleccionista
         onPlusClick = if (userRole == UserRole.COLLECTOR) {

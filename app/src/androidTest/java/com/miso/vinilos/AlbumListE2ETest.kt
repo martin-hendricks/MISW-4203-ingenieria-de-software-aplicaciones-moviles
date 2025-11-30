@@ -204,10 +204,13 @@ class AlbumListE2ETest {
      */
     @Test
     fun testErrorRetryFunctionality() = runTest {
-        // Arrange - Primero error, luego éxito
-        mockWebServerRule.server.enqueue(
-            JsonResponseHelper.createServerErrorResponse()
-        )
+        // Arrange - El ViewModel hace 1 retry automático, así que necesitamos 2 errores + 1 éxito
+        // init() intenta 1ra vez → error
+        // retry automático 1 → error (se queda en error)
+        // click manual en Reintentar → éxito
+        mockWebServerRule.server.enqueue(JsonResponseHelper.createServerErrorResponse())
+        mockWebServerRule.server.enqueue(JsonResponseHelper.createServerErrorResponse())
+
         val testAlbums = TestDataFactory.createTestAlbums()
         mockWebServerRule.server.enqueue(
             JsonResponseHelper.createAlbumsSuccessResponse(testAlbums)
@@ -225,22 +228,24 @@ class AlbumListE2ETest {
             }
         }
 
-        // Assert - Verificar estado de error inicial
+        // Assert - Verificar estado de error inicial (después de 2 intentos fallidos)
         composeTestRule.waitForIdle()
         CustomMatchers.verifyErrorMessageIsVisible(composeTestRule)
         CustomMatchers.verifyRetryButtonIsVisible(composeTestRule)
-        
+
         // Capturar screenshot del estado de error inicial
         screenshotTestRule.takeScreenshot("01-estado-error")
 
         // Act - Hacer clic en reintentar
-        composeTestRule.onNodeWithText("Reintentar").performClick()
+        composeTestRule.onNodeWithText("Reintentar", substring = true).performClick()
 
         // Assert - Verificar que los álbumes se cargan después del reintento
+
         composeTestRule.waitForIdle()
+
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "Abbey Road")
         CustomMatchers.verifyAlbumIsVisible(composeTestRule, "The Dark Side of the Moon")
-        
+
         // Capturar screenshot después del reintento exitoso
         screenshotTestRule.takeScreenshot("02-después-reintento")
     }

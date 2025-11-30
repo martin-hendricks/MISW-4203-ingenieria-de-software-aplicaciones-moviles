@@ -5,18 +5,20 @@ import com.google.gson.GsonBuilder
 import com.miso.vinilos.model.data.Album
 import com.miso.vinilos.model.data.Musician
 import com.miso.vinilos.model.data.Collector
+import com.miso.vinilos.model.network.DateTypeAdapter
 import okhttp3.mockwebserver.MockResponse
+import java.util.Date
 
 /**
  * Helper para crear respuestas JSON para MockWebServer
- * 
+ *
  * Proporciona métodos para convertir objetos de prueba a JSON
  * y crear respuestas HTTP mock apropiadas
  */
 object JsonResponseHelper {
-    
+
     private val gson: Gson = GsonBuilder()
-        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        .registerTypeAdapter(Date::class.java, DateTypeAdapter())
         .create()
     
     /**
@@ -147,5 +149,28 @@ object JsonResponseHelper {
             .setResponseCode(200)
             .setHeader("Content-Type", "application/json")
             .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta exitosa 201 (Created) para POST requests
+     * Usado para crear nuevos recursos como álbumes
+     */
+    fun createCreatedResponse(resource: Any): MockResponse {
+        val json = gson.toJson(resource)
+        return MockResponse()
+            .setResponseCode(201)
+            .setHeader("Content-Type", "application/json")
+            .setBody(json)
+    }
+    
+    /**
+     * Crea una respuesta exitosa 200 (OK) para POST requests que no crean recursos
+     * Usado para operaciones como asociar álbum a artista
+     */
+    fun createOkResponse(): MockResponse {
+        return MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody("{}")
     }
 }

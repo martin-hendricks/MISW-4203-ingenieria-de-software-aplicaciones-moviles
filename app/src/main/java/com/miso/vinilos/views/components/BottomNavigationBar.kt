@@ -48,20 +48,23 @@ fun BottomNavigationBar(
            contentColor = MaterialTheme.colorScheme.secondary
        ) {
            bottomNavItems.forEach { item ->
+               val isSelected = currentDestination?.hierarchy?.any {
+                   it.route == item.route
+               } == true
+
                NavigationBarItem(
                    icon = {
                        Icon(
                            imageVector = item.icon,
-                           contentDescription = item.title
+                           // Descripción mejorada con estado para TalkBack
+                           contentDescription = "${item.title}, ${if (isSelected) "seleccionado" else "no seleccionado"}"
                        )
                    },
                    label = { Text(
                        text = item.title,
                        style = MaterialTheme.typography.labelSmall
                    ) },
-                   selected = currentDestination?.hierarchy?.any {
-                       it.route == item.route
-                   } == true,
+                   selected = isSelected,
                    onClick = {
                        navController.navigate(item.route) {
                            // Evitar múltiples copias de la misma pantalla

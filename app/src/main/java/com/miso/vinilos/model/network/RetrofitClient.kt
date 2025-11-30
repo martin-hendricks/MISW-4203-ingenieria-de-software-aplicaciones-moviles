@@ -5,6 +5,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 /**
@@ -29,11 +30,12 @@ object RetrofitClient {
     }
     
     /**
-     * Gson configurado para manejar fechas en formato ISO 8601
+     * Gson configurado para manejar fechas en formato ISO 8601 con timezone offset
+     * Usa DateTypeAdapter personalizado para formatear fechas como "2011-08-01T00:00:00-05:00"
      */
     private val gson by lazy {
         GsonBuilder()
-            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .registerTypeAdapter(Date::class.java, DateTypeAdapter())
             .setLenient()
             .create()
     }

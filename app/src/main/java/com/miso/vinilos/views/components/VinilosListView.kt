@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /**
@@ -37,40 +40,81 @@ fun <T> VinilosListView(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // Header con título y botón
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 18.5.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Título
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f)
-            )
-            
-            // Botón Plus (solo si onPlusClick no es null)
+        // Header con título y botón (solo mostrar si el título no está vacío)
+        if (title.isNotBlank()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 18.5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Título
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics {
+                            // Marcar como heading para navegación de TalkBack
+                            heading()
+                        }
+                )
+                
+                // Botón Plus (solo si onPlusClick no es null)
+                onPlusClick?.let {
+                    FilledIconButton(
+                        onClick = it,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            // Descripción contextual para TalkBack
+                            contentDescription = "Agregar nuevo elemento a $title"
+                        )
+                    }
+                }
+            }
+        } else {
+            // Si no hay título, solo mostrar el botón Plus si existe
             onPlusClick?.let {
-                FilledIconButton(
-                    onClick = it,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = Color.Black
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 18.5.dp),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Agregar"
-                    )
+                    FilledIconButton(
+                        onClick = it,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            // Descripción contextual para TalkBack
+                            contentDescription = "Agregar nuevo elemento"
+                        )
+                    }
                 }
             }
         }
         
         // Lista
-        LazyColumn {
+        LazyColumn(
+            modifier = Modifier.semantics {
+                // Descripción de la lista para TalkBack
+                contentDescription = if (title.isNotBlank()) {
+                    "Lista de $title, ${items.size} elementos"
+                } else {
+                    "Lista con ${items.size} elementos"
+                }
+            }
+        ) {
             items(items) { item ->
                 itemContent(item)
             }

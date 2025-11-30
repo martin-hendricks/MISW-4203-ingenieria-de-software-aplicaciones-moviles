@@ -1,7 +1,7 @@
 package com.miso.vinilos.model.database.converters
 
 import androidx.room.TypeConverter
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.miso.vinilos.model.data.*
 import java.util.Date
@@ -12,7 +12,9 @@ import java.util.Date
  */
 class Converters {
 
-    private val gson = Gson()
+    private val gson = GsonBuilder()
+        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        .create()
 
     // Converters para Date
     @TypeConverter

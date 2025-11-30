@@ -57,5 +57,18 @@ interface MusicianApiService {
      */
     @DELETE("musicians/{id}")
     suspend fun deleteMusician(@Path("id") id: Int): Response<Unit>
+    
+    /**
+     * Agrega un álbum a un músico
+     * POST /musicians/{musicianId}/albums/{albumId}
+     * 
+     * @param musicianId ID del músico
+     * @param albumId ID del álbum
+     */
+    @POST("musicians/{musicianId}/albums/{albumId}")
+    suspend fun addAlbumToMusician(
+        @Path("musicianId") musicianId: Int,
+        @Path("albumId") albumId: Int
+    ): Response<Unit>
 }
 

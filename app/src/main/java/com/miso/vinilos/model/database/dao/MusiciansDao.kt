@@ -15,10 +15,10 @@ interface MusiciansDao {
 
     /**
      * Obtiene todos los músicos de la base de datos
-     * @return Lista de todos los músicos
+     * @return Lista de todos los músicos o null si la tabla está vacía
      */
     @Query("SELECT * FROM musicians_table")
-    fun getMusicians(): List<Musician>
+    fun getMusicians(): List<Musician>?
 
     /**
      * Obtiene un músico específico por su ID
