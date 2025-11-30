@@ -25,7 +25,6 @@ import com.miso.vinilos.views.screens.AlbumDetailScreen
 import com.miso.vinilos.views.theme.VinilosTheme
 import kotlinx.coroutines.Dispatchers
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

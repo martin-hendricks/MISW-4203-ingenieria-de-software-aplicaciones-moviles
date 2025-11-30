@@ -25,7 +25,6 @@ import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.viewmodels.ProfileViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
@@ -208,7 +207,7 @@ class CreateAlbumE2ETest {
         val calendar = Calendar.getInstance()
         val dateFormatter = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
         val daysToTry = listOf(11, 12, 13, 14, 16, 17, 18, 19, 20, 21)
-        var dateSelected = false
+
 
         for (day in daysToTry) {
             try {
@@ -219,7 +218,7 @@ class CreateAlbumE2ETest {
                 composeTestRule.onNodeWithText(fullDateString, useUnmergedTree = true)
                     .performClick()
                 composeTestRule.waitForIdle()
-                dateSelected = true
+
                 break
             } catch (e: Exception) {
                 // Intentar con el siguiente día
@@ -409,7 +408,7 @@ class CreateAlbumE2ETest {
         val calendar = Calendar.getInstance()
         val dateFormatter = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
         val daysToTry = listOf(11, 12, 13, 14, 16, 17, 18, 19, 20, 21)
-        var dateSelected = false
+
 
         for (day in daysToTry) {
             try {
@@ -420,7 +419,7 @@ class CreateAlbumE2ETest {
                 composeTestRule.onNodeWithText(fullDateString, useUnmergedTree = true)
                     .performClick()
                 composeTestRule.waitForIdle()
-                dateSelected = true
+
                 break
             } catch (e: Exception) {
                 // Intentar con el siguiente día

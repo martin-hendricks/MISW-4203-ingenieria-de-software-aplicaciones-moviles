@@ -1,5 +1,6 @@
 package com.miso.vinilos.model.network
 
+import android.annotation.SuppressLint
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
@@ -16,6 +17,7 @@ import java.util.*
 class DateTypeAdapter : TypeAdapter<Date>() {
     
     // Formato para serializar (enviar al servidor)
+    @SuppressLint("NewApi")
     private val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
     
     // Formatos para deserializar (recibir del servidor) - múltiples formatos posibles
@@ -23,6 +25,7 @@ class DateTypeAdapter : TypeAdapter<Date>() {
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         },
+        @SuppressLint("NewApi")
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault()),
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")

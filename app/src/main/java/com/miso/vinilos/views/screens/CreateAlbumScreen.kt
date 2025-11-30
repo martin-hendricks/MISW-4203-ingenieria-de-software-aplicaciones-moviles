@@ -27,7 +27,6 @@ import com.miso.vinilos.model.data.RecordLabel
 import com.miso.vinilos.viewmodels.AlbumViewModel
 import com.miso.vinilos.viewmodels.CreateAlbumUiState
 import com.miso.vinilos.views.theme.DarkGreen
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.TimeZone
 
@@ -294,7 +293,7 @@ private fun CreateAlbumForm(
                 modifier = Modifier.fillMaxWidth(),
                 containerColor = DarkGreen
             ) {
-                Genre.values().forEach { genre ->
+                Genre.entries.forEach { genre ->
                     DropdownMenuItem(
                         text = { 
                             Text(
@@ -360,7 +359,7 @@ private fun CreateAlbumForm(
                 modifier = Modifier.fillMaxWidth(),
                 containerColor = DarkGreen
             ) {
-                RecordLabel.values().forEach { label ->
+                RecordLabel.entries.forEach { label ->
                     DropdownMenuItem(
                         text = { 
                             Text(
@@ -454,7 +453,7 @@ private fun CreateAlbumForm(
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Yellow,
-                contentColor = androidx.compose.ui.graphics.Color.Black
+                contentColor = Color.Black
             ),
             enabled = name.isNotBlank() && 
                      cover.isNotBlank() && 

@@ -1,7 +1,6 @@
 package com.miso.vinilos.model.database.converters
 
 import androidx.room.TypeConverter
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.miso.vinilos.model.data.*
